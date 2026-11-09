@@ -1,0 +1,12 @@
+plugins { id 'java-library' }
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    implementation 'jakarta.persistence:jakarta.persistence-api'
+}

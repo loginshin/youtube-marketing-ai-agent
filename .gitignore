@@ -5,3 +5,5 @@
 logs/
 chrome-profiles/
 screenshots/
+data/
+/db/build/
