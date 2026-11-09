@@ -16,7 +16,7 @@
 
 ## 로컬 개발 환경
 
-React + TypeScript + Vite 화면과 Java 21 기반의 단일 Spring Boot 서버를 로컬에서 실행하고 REST API로 연결합니다. 서버는 도메인별 패키지로 구성하며, AI 분석에는 Spring AI와 OpenAI API를 사용합니다. 저장소 방식과 Docker 도입 여부는 보류 중이며 로컬 Chrome 연동은 Playwright Java를 검토합니다.
+React + TypeScript + Vite 화면과 Java 21 기반의 단일 Spring Boot 서버를 로컬에서 실행하고 REST API로 연결합니다. 서버는 도메인별 패키지로 구성하며, AI 분석에는 Spring AI와 OpenAI API를 사용합니다. 작업과 이력은 루트 `db/` 모듈의 JPA 엔티티로 로컬 H2 파일에 저장합니다. Docker 도입 여부는 보류 중이며 로컬 Chrome 연동은 Playwright Java를 검토합니다.
 
 ### 실행 방법
 

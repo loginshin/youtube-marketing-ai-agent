@@ -7,7 +7,7 @@
 
 React + TypeScript + Vite 화면이 REST API로 로컬 Spring Boot 모놀리스에 요청한다. Java 21과 Gradle을 사용하고, 서버 내부는 도메인별 패키지로 구성한다. OpenAI API는 Spring AI를 통해 백엔드에서 호출한다. Electron은 선택지에서 제외했다.
 
-로컬 실행을 기본으로 한다. 저장 방식은 STEP 4에서, Chrome 제어 방식은 STEP 5에서 결정한다. Playwright Java는 검증 후보이며 Docker와 최종 배포 방식은 보류한다.
+로컬 실행을 기본으로 한다. 로컬 DB는 파일 기반 H2를 사용하고 Chrome 제어 방식은 STEP 5에서 결정한다. Playwright Java는 검증 후보이며 Docker와 최종 배포 방식은 보류한다.
 
 ## 1. 과제 요구사항 중 환경 설계에 영향 주는 사항
 
@@ -84,6 +84,8 @@ cd backend
 .\gradlew.bat bootRun
 ```
 
+백엔드에서 bootRun을 실행하면 작업 디렉터리의 `data/`에 H2 파일이 생성된다. 시작할 때 db 모듈의 SQL로 테이블을 초기화하고 Hibernate가 매핑을 검증한다. 기존 테이블 구조 변경에는 별도 마이그레이션이 필요하다. 테스트는 메모리 DB를 사용한다.
+
 ### REST API 연결 검증
 
 백엔드의 `http://localhost:8080/actuator/health`에서 HTTP 200과 JSON의 `status: UP`을 확인한다. STEP 0에서 Vite 개발 프록시가 `/actuator` 요청을 `http://localhost:8080`으로 전달하도록 설정한다. React 화면에서 상대 경로 `/actuator/health`를 호출해 상태를 표시하고, 브라우저 Network 탭에서 같은 JSON을 확인한다. 백엔드를 종료한 뒤 새로 고침하면 연결 실패가 표시되어야 한다. 이 검증에는 외부 API 키가 필요 없다.
@@ -92,6 +94,7 @@ cd backend
 
 ```text
 marketing-ai-agent/
+├── db/                  # JPA 엔티티와 초기 SQL을 제공하는 Gradle 모듈
 ├── frontend/src/
 │   ├── features/{video,analysis,comment}/
 │   ├── components/
