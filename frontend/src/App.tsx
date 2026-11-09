@@ -1,3 +1,4 @@
+import { JobPanel } from './features/comment/JobPanel'
 import { DraftEditor } from './features/analysis/DraftEditor'
 import { videos } from './features/video/examples'
 import { VideoList } from './features/video/VideoList'
@@ -33,7 +34,7 @@ export default function App() {
     <div className="dashboard">
       <section><h2>영상 목록</h2><VideoList selected={selected} onSelect={select} /></section>
       <section><h2>분석과 초안</h2><DraftEditor video={video} draft={edits[selected] ?? video.draft} onEdit={text => setEdits(previous => ({ ...previous, [selected]: text }))} /></section>
-      <section><h2>작업 상태</h2><p>승인 전</p></section>
+      <section><h2>작업 상태</h2><JobPanel video={video} draft={edits[selected] ?? video.draft} /></section>
     </div>
     <footer>{message}</footer>
   </main>
