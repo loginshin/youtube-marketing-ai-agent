@@ -2,7 +2,7 @@
 
 유튜브 영상에 담긴 연애 고민을 요약하고, 영상 맥락에 맞는 댓글 초안을 검토하고 게시하는 로컬 대시보드 프로젝트입니다. TRACK 2 마케팅 AI 에이전트 과제로, 영상 속 구체적인 발언이나 장면을 바탕으로 연애 사주 브랜드 ‘운명원’에 관심을 가질 만한 댓글을 작성하는 것이 목표입니다.
 
-**현재 단계**는 요구사항 정리와 개발 환경 설계입니다. 저장소에는 과제 안내서와 개발 문서가 있으며, 첫 구현 목표는 예시 데이터로 세 화면의 흐름을 확인하는 것입니다.
+**현재 단계**는 요구사항 정리와 개발 환경 설계입니다. 저장소에는 과제 안내서와 개발 문서가 있으며, 첫 구현 목표는 React 화면에서 로컬 Spring Boot 서버의 응답을 확인하는 것입니다.
 
 ## 대시보드 사용 흐름
 
@@ -16,28 +16,11 @@
 
 ## 로컬 개발 환경
 
-화면은 **React + TypeScript**, 개발 서버와 빌드는 **Vite**, 패키지 관리는 **npm**을 사용합니다. Node.js LTS와 Git을 준비하면 첫 화면을 개발할 수 있습니다. 초기 화면은 예시 데이터를 사용하므로 API 키가 필요하지 않습니다.
-
-### 최초 프로젝트 생성
-
-앱을 처음 구성하는 개발자는 저장소 루트에서 다음 명령을 실행합니다. Vite가 `marketing-agent/` 폴더에 React 앱을 생성합니다.
-
-```sh
-npm create vite@latest marketing-agent -- --template react-ts
-cd marketing-agent
-npm install
-npm run dev
-```
-
-터미널에 표시된 로컬 주소를 브라우저에서 엽니다. 이후에는 앱 폴더에서 `npm run dev`로 다시 시작하고, `npm run lint`와 `npm run build`로 코드 검사와 빌드를 확인합니다.
-
-### 이후 연동 계획
-
-예시 데이터로 화면을 검증한 뒤 YouTube 데이터 조회와 OpenAI 분석을 연결합니다. 비밀 키는 브라우저 번들과 분리된 실행 계층에서 관리합니다. 로컬 Chrome 제어 방식, 작업 이력 저장소, 배포 방식은 해당 기능을 구현하기 전에 결정할 예정입니다.
+React + TypeScript + Vite 화면과 Java 21 기반의 단일 Spring Boot 서버를 로컬에서 실행하고 REST API로 연결합니다. 서버는 도메인별 패키지로 구성하며, AI 분석에는 Spring AI와 OpenAI API를 사용합니다. 저장소 방식과 Docker 도입 여부는 보류 중이며 로컬 Chrome 연동은 Playwright Java를 검토합니다.
 
 ## 프로젝트 문서
 
 - [과제 안내서 (PDF)](docs/track-2-marketing-agent.pdf) — 필수 기능, 평가 기준, 시연 영상과 제출물
-- [개발 환경 구성 가이드](docs/ENVIRONMENT_SETUP.md) — 도구 설치, 초기 폴더 구조, 타입 예시, 환경 점검 방법
-- [개발 TODO](docs/TODO.md) — 단계별 우선순위, 작업 목록, 완료 조건
+- [개발 환경 구성 가이드](ENVIRONMENT_SETUP.md) — 도구 설치, 초기 폴더 구조, 타입 예시, 환경 점검 방법
+- [개발 TODO](TODO.md) — 단계별 우선순위, 작업 목록, 완료 조건
 - [커밋 메시지 규칙](docs/COMMIT_CONVENTION.md) — 유형별 이모지, 제목 형식과 작성 예시
