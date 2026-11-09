@@ -1,6 +1,6 @@
 # 마케팅 AI 에이전트 아키텍처
 
-STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vite 개발 프록시를 통해 Spring Boot의 `GET /actuator/health`를 호출한다. 다음 단계는 예시 데이터로 만드는 3단 대시보드다. [실행 가이드](ENVIRONMENT_SETUP.md) · [단계별 구현 계획](TODO.md)
+STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vite 개발 프록시를 통해 Spring Boot의 `GET /actuator/health`를 호출한다. STEP 1에서 3단 예시 대시보드를 구현했다. 다음 단계는 YouTube 데이터 연동이다. [실행 가이드](ENVIRONMENT_SETUP.md) · [단계별 구현 계획](TODO.md)
 
 ## 1. 확정한 기술·아키텍처 결정
 
