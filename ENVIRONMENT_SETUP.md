@@ -51,7 +51,7 @@ Windows는 PowerShell, macOS/Linux는 기본 터미널을 사용한다. Node.js 
 
 ## 3. React + TypeScript 프로젝트 생성
 
-저장소 루트에서 최초 한 번 생성한다.
+아래는 최초 생성 기록이다. 기존 체크아웃에서는 README의 `npm ci` 절차를 사용한다.
 
 ```sh
 npm create vite@latest frontend -- --template react-ts
@@ -170,10 +170,10 @@ git check-ignore .env.local
 
 ## 7. 완료 기준 (Definition of Done)
 
-- [ ] Node.js, npm, Git 및 Java 컴파일러 버전 확인(Java 21)
-- [ ] React 화면과 HMR 확인, 화면에서 백엔드 health JSON 수신
-- [ ] `frontend/`에서 `npm run lint`와 `npm run build` 성공
-- [ ] `backend/`에서 `.\gradlew.bat test`와 `.\gradlew.bat build` 성공, `build/libs/`에 JAR 생성 확인
-- [ ] 외부 API 키 없이 초기 테스트 통과, 로그·Chrome 프로필·비밀 값 제외 확인
+- [x] Node.js, npm, Git 및 Java 컴파일러 버전 확인(Java 21)
+- [x] React 화면과 HMR 확인, 화면에서 백엔드 health JSON 수신
+- [x] `frontend/`에서 `npm run lint`와 `npm run build` 성공
+- [x] `backend/`에서 `.\gradlew.bat test`와 `.\gradlew.bat build` 성공, `build/libs/`에 JAR 생성 확인
+- [x] 외부 API 키 없이 초기 테스트 통과, 로그·Chrome 프로필·비밀 값 제외 확인
 
 이후 작업 순서와 시연 기준은 [개발 TODO](TODO.md)를 따른다.

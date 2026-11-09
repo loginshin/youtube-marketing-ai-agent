@@ -7,12 +7,12 @@
 ## STEP 0. 개발 환경 구성
 
 - [x] 루트 Git 저장소 초기화 및 첫 커밋
-- [ ] Node.js LTS, npm, JDK 21, Git 버전 및 IDE·Chrome 설치 확인
-- [ ] frontend에 Vite React TS, backend에 Spring Initializr Gradle 프로젝트 생성
-- [ ] 환경 가이드에 따라 기능별 패키지 구성
-- [ ] 두 개발 서버 실행 후 React에서 Spring Boot health REST 응답 확인
-- [ ] frontend lint/build 및 backend test/build 검증
-- [ ] 비밀 키·로그·Chrome 프로필 제외 규칙 점검
+- [x] Node.js LTS, npm, JDK 21, Git 버전 및 IDE·Chrome 설치 확인
+- [x] frontend에 Vite React TS, backend에 Spring Initializr Gradle 프로젝트 생성
+- [x] 환경 가이드에 따라 기능별 패키지 구성
+- [x] 두 개발 서버 실행 후 React에서 Spring Boot health REST 응답 확인
+- [x] frontend lint/build 및 backend test/build 검증
+- [x] 비밀 키·로그·Chrome 프로필 제외 규칙 점검
 
 **완료 조건:** API 키 없이 로컬 대시보드에서 서버 연결을 확인하고 양쪽 빌드를 재현한다.
 
