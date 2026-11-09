@@ -1,33 +1,17 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '4.1.2'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '4.1.2' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
-group = 'com.marketing'
-version = '0.0.1-SNAPSHOT'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-    implementation project(':db')
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'com.h2database:h2'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'io.spring.dependency-management'
+    group = 'com.marketing'
+    version = '0.0.1-SNAPSHOT'
+    java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+    repositories { mavenCentral() }
+    dependencyManagement {
+        imports { mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES }
+    }
+    tasks.withType(Test).configureEach { useJUnitPlatform() }
 }

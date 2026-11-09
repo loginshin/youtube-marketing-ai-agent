@@ -5,7 +5,7 @@
 
 ## 0. 목표 및 결정 범위
 
-React + TypeScript + Vite 화면이 REST API로 로컬 Spring Boot 모놀리스에 요청한다. Java 21과 Gradle을 사용하고, 서버 내부는 도메인별 패키지로 구성한다. OpenAI API는 Spring AI를 통해 백엔드에서 호출한다. Electron은 선택지에서 제외했다.
+React + TypeScript + Vite 화면이 REST API로 로컬 Spring Boot 모놀리스에 요청한다. Java 21과 Gradle을 사용하고, 서버 내부는 도메인별 패키지로 구성한다. OpenAI API는 backend/ai 모듈의 RestClient를 통해 호출한다. Electron은 선택지에서 제외했다.
 
 로컬 실행을 기본으로 한다. 로컬 DB는 파일 기반 H2를 사용하고 Chrome 제어 방식은 STEP 5에서 결정한다. Playwright Java는 검증 후보이며 Docker와 최종 배포 방식은 보류한다.
 
@@ -74,14 +74,14 @@ npm run build
 ### Spring Boot 서버 생성 및 실행
 
 1. [Spring Initializr](https://start.spring.io/)에서 Gradle (Groovy), Java, Jar, Java 21을 선택한다. Group은 `com.marketing`, Artifact는 `backend`, Package name은 `com.marketing.agent`로 지정한다.
-2. 기준 조합은 **Spring Boot 4.1.2 + Spring AI 2.0.2**다. Spring AI 2.0.x가 Boot 4.1.x를 지원하며 Java 21은 Boot의 지원 범위에 들어간다. 생성 화면의 패치가 다르면 생성 후 Gradle의 Boot 플러그인 버전을 기준값에 맞춘다. [Spring AI 호환성](https://docs.spring.io/spring-ai/reference/getting-started.html) · [Boot 시스템 요구사항](https://docs.spring.io/spring-boot/system-requirements.html)
-3. STEP 0에는 Spring Web과 Actuator를 선택한다. ZIP을 풀어 루트 바로 아래 `backend/build.gradle`과 Gradle Wrapper가 위치하게 한다. STEP 3에서 Gradle에 Spring AI BOM `org.springframework.ai:spring-ai-bom:2.0.2`와 `org.springframework.ai:spring-ai-starter-model-openai`를 추가한다.
+2. 기준 조합은 Spring Boot 4.1.2와 Java 21이다. AI는 별도 ai 모듈에서 OpenAI Responses API를 직접 호출한다.
+3. STEP 0에는 Spring Web과 Actuator를 선택한다. ZIP을 풀어 루트 바로 아래 `backend/build.gradle`과 Gradle Wrapper가 위치하게 한다. 현재는 api, ai, db 멀티모듈이며 api가 실행 모듈이다. API 키 설정은 루트 README를 따른다.
 4. 별도 터미널에서 서버를 실행한다. 아래는 Windows PowerShell 기준이며 macOS/Linux에서는 `./gradlew`를 사용한다.
 
 ```powershell
 cd backend
 .\gradlew.bat --version
-.\gradlew.bat bootRun
+.\gradlew.bat :api:bootRun
 ```
 
 백엔드에서 bootRun을 실행하면 작업 디렉터리의 `data/`에 H2 파일이 생성된다. 시작할 때 db 모듈의 SQL로 테이블을 초기화하고 Hibernate가 매핑을 검증한다. 기존 테이블 구조 변경에는 별도 마이그레이션이 필요하다. 테스트는 메모리 DB를 사용한다.
@@ -94,12 +94,12 @@ cd backend
 
 ```text
 marketing-ai-agent/
-├── db/                  # JPA 엔티티와 초기 SQL을 제공하는 Gradle 모듈
+├── backend/db/          # JPA 엔티티와 초기 SQL을 제공하는 Gradle 모듈
 ├── frontend/src/
 │   ├── features/{video,analysis,comment}/
 │   ├── components/
 │   └── shared/
-├── backend/src/main/java/com/marketing/agent/
+├── backend/api/src/main/java/com/marketing/agent/
 │   ├── video/       # YouTube 영상 검색 및 데이터 조회
 │   ├── analysis/    # 영상 맥락 분석 및 댓글 초안 생성
 │   ├── comment/     # 댓글 검토, 작업 상태, 중복 방지, 이력
@@ -177,7 +177,7 @@ git check-ignore .env.local
 - [x] Node.js, npm, Git 및 Java 컴파일러 버전 확인(Java 21)
 - [x] React 화면과 HMR 확인, 화면에서 백엔드 health JSON 수신
 - [x] `frontend/`에서 `npm run lint`와 `npm run build` 성공
-- [x] `backend/`에서 `.\gradlew.bat test`와 `.\gradlew.bat build` 성공, `build/libs/`에 JAR 생성 확인
+- [x] `backend/`에서 `.\gradlew.bat test`와 `.\gradlew.bat build` 성공, `api/build/libs/`에 JAR 생성 확인
 - [x] 외부 API 키 없이 초기 테스트 통과, 로그·Chrome 프로필·비밀 값 제외 확인
 
 이후 작업 순서와 시연 기준은 [개발 TODO](TODO.md)를 따른다.

@@ -133,7 +133,7 @@ stateDiagram-v2
 - Chrome 연결: 로컬 Spring Boot 프로세스와 OS별 Chrome 프로필/Playwright 연동 가능성 검증.
 - 자막 접근: 모든 공개 영상의 자막이 YouTube Data API로 제공된다고 가정하지 않음.
 - 작업 상태 전파: 초기 폴링 vs SSE (요구가 생기면 결정).
-- API 명세와 추가 저장 필드는 화면 계약에 따라 결정한다. 현재 기준은 [작업 상태](../db/src/main/java/com/marketing/agent/db/entity/JobStatus.java)와 [초기 SQL](../db/src/main/resources/db/schema.sql)이다.
+- API 명세와 추가 저장 필드는 화면 계약에 따라 결정한다. 현재 기준은 [작업 상태](../backend/db/src/main/java/com/marketing/agent/db/entity/JobStatus.java)와 [초기 SQL](../backend/db/src/main/resources/db/schema.sql)이다.
 
 ## 6. 완료 기준 (설계 검토)
 

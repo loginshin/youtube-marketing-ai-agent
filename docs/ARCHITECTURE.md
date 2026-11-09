@@ -8,7 +8,7 @@ STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vit
 
 - **Frontend:** React + TypeScript + Vite
 - **Backend:** Spring Boot + Java 21 + Gradle Wrapper
-- **AI 연동:** Spring AI를 이용한 OpenAI API 호출
+- **AI 연동:** ai 모듈의 RestClient를 이용한 OpenAI Responses API 호출
 - **통신:** Frontend ↔ Backend 사이 REST API
 - **배포 단위:** 백엔드는 **단일 Spring Boot 애플리케이션**으로 유지한다. 도메인별 서버 분리/MSA는 하지 않는다.
 - **코드 조직:** 프론트엔드는 **Feature-Based Architecture**, 백엔드는 **도메인별 패키지 기반 Modular Monolith + 필요한 범위의 Layered Architecture**를 사용한다.
@@ -17,7 +17,7 @@ STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vit
 
 ### 영속 저장
 
-백엔드는 루트의 Gradle 모듈 `:db`에 의존한다. 이 모듈은 JPA 엔티티와 [초기 스키마](../db/src/main/resources/db/schema.sql)를 제공한다. 로컬 H2 파일에 영상별 작업 하나와 상태 변경 이력을 저장한다. 재시도는 같은 작업에 이력을 추가하는 방식으로 설계한다. 작업 상태 변경과 이력 추가는 한 트랜잭션에서 처리해야 한다.
+백엔드는 `backend/` 내부 Gradle 모듈 `:db`에 의존한다. 이 모듈은 JPA 엔티티와 [초기 스키마](../backend/db/src/main/resources/db/schema.sql)를 제공한다. 로컬 H2 파일에 영상별 작업 하나와 상태 변경 이력을 저장한다. 재시도는 같은 작업에 이력을 추가하는 방식으로 설계한다. 작업 상태 변경과 이력 추가는 한 트랜잭션에서 처리해야 한다.
 
 ### 현재 미확정 사항
 
@@ -57,7 +57,7 @@ frontend/src/
 다음 구조를 **설계 기준**으로 채택한다.
 
 ```text
-backend/src/main/java/com/marketing/agent/
+backend/api/src/main/java/com/marketing/agent/
 ├── video/
 │   ├── presentation/        # REST API 및 DTO
 │   ├── application/         # 영상 검색/조회 유스케이스
@@ -67,7 +67,7 @@ backend/src/main/java/com/marketing/agent/
 │   ├── presentation/
 │   ├── application/
 │   ├── domain/
-│   └── infrastructure/      # Spring AI / OpenAI 연동
+│   └── infrastructure/      # ai 모듈 호출
 ├── comment/
 │   ├── presentation/
 │   ├── application/
@@ -119,3 +119,5 @@ backend/src/main/java/com/marketing/agent/
 - 댓글은 사용자의 명시적 검토·승인을 전제로 설계하고, 기만적 홍보·시청자 사칭·다중 계정 반복 게시를 자동화하지 않는다. 실제 게시 검증은 본인 관리/허가된 테스트 환경을 대상으로 한다.
 
 게시 확인에 실패한 작업은 결과 확인 대기로 보관한다. 확인 전에는 같은 영상에 새 작업을 허용하지 않는다. 구체적인 상태 전이와 재시도 정책은 STEP 4에서 확정한다.
+
+백엔드 Gradle 모듈은 api, ai, db로 나눈다. api만 실행 애플리케이션이며 ai와 db에 의존한다. ai와 db는 서로 의존하지 않는다. 키 설정과 실행법은 루트 README를 따른다.

@@ -1,3 +1,2 @@
 rootProject.name = 'backend'
-include ':db'
-project(':db').projectDir = file('../db')
+include 'api', 'ai', 'db'

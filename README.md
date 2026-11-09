@@ -29,7 +29,7 @@ Node.js LTS와 JDK 21을 준비하고 저장소 루트에서 터미널 두 개�
 ```powershell
 # 터미널 1 — 백엔드
 cd backend
-.\gradlew.bat bootRun
+.\gradlew.bat :api:bootRun
 ```
 
 ```powershell
@@ -42,3 +42,23 @@ npm run dev
 Vite가 표시한 주소를 열면 API 키 없이 서버 연결 상태를 확인할 수 있습니다.
 
 [개발 환경 가이드](docs/ENVIRONMENT_SETUP.md) · [아키텍처](docs/ARCHITECTURE.md) · [구현 현황](docs/TODO.md) · [과제 안내서](docs/track-2-marketing-agent.pdf)
+
+## 백엔드 모듈과 API 키
+
+- `backend/api`: Spring Boot 실행 서버, API와 작업 흐름 (`api → ai`, `api → db`)
+- `backend/ai`: OpenAI Responses API 호출 클라이언트 (DB 의존 없음)
+- `backend/db`: JPA 엔티티와 초기 SQL
+
+`backend/.env.example`을 `backend/.env`로 복사한 뒤 `OPENAI_API_KEY=` 뒤에 키를 입력합니다. 따옴표 없이 작성하고 서버를 재시작하세요. `OPENAI_MODEL`로 모델을 변경할 수 있으며, `YOUTUBE_API_KEY`는 향후 YouTube 연동을 위한 설정입니다. OS 환경 변수는 `.env`보다 우선합니다. 실제 `.env`는 Git에서 제외됩니다.
+
+```powershell
+cd backend
+Copy-Item .env.example .env # 처음 한 번만 실행; 기존 .env가 있으면 덮어쓰지 마세요
+.\gradlew.bat :api:bootRun
+```
+
+키가 없어도 예시 대시보드와 서버는 실행됩니다. 키를 추가하면 AI 모듈의 `OpenAiClient.generate(instructions, input)`에서 실제 요청을 보낼 수 있습니다. 화면의 분석·초안은 아직 예시 데이터이며 분석 API와 화면 연결은 후속 구현입니다. 시작 시 자동 AI 요청은 없습니다.
+
+빌드: `backend/`에서 `.\gradlew.bat :api:bootJar` (결과: `api/build/libs/`). JAR 직접 실행도 `backend/`를 작업 디렉터리로 사용하세요. 기존 H2 경로 `backend/data/marketing-agent`를 유지합니다.
+
+연동 기준: [OpenAI 공식 API 문서](https://developers.openai.com/api/reference/overview), [Responses API 시작 가이드](https://developers.openai.com/api/docs/quickstart).
