@@ -40,3 +40,4 @@ npm run dev
 - [과제 안내서 (PDF)](docs/track-2-marketing-agent.pdf) — 필수 기능, 평가 기준, 시연 영상과 제출물
 - [개발 환경 구성 가이드](docs/ENVIRONMENT_SETUP.md) — 도구 설치, 초기 폴더 구조, 타입 예시, 환경 점검 방법
 - [개발 TODO](docs/TODO.md) — 단계별 우선순위, 작업 목록, 완료 조건
+- [커밋 메시지 규칙](docs/COMMIT_CONVENTION.md) — 유형별 이모지, 제목 형식과 작성 예시
