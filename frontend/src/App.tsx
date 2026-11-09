@@ -1,6 +1,10 @@
+import { videos } from './features/video/examples'
+import { VideoList } from './features/video/VideoList'
 import { useEffect, useState } from 'react'
 
 export default function App() {
+  const [selected, select] = useState(videos[0].id)
+  const video = videos.find(v => v.id === selected)!
   const [message, setMessage] = useState('서버 연결을 확인하고 있습니다.')
 
   useEffect(() => {
@@ -22,5 +26,13 @@ export default function App() {
     return () => controller.abort()
   }, [])
 
-  return <main><h1>마케팅 AI 에이전트</h1><p role="status">{message}</p></main>
+  return <main>
+    <header><h1>댓글 작업실</h1><span>예시 데이터</span></header>
+    <div className="dashboard">
+      <section><h2>영상 목록</h2><VideoList selected={selected} onSelect={select} /></section>
+      <section><h2>분석과 초안</h2><h3>{video.title}</h3><p>{video.concern}</p><blockquote>{video.evidence}</blockquote><p>{video.draft}</p></section>
+      <section><h2>작업 상태</h2><p>승인 전</p></section>
+    </div>
+    <footer>{message}</footer>
+  </main>
 }
