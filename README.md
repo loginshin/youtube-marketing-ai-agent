@@ -40,6 +40,7 @@ Vite가 출력한 주소를 열면 서버 연결 상태를 확인할 수 있습�
 ## 프로젝트 문서
 
 - [과제 안내서 (PDF)](docs/track-2-marketing-agent.pdf) — 필수 기능, 평가 기준, 시연 영상과 제출물
-- [개발 환경 구성 가이드](ENVIRONMENT_SETUP.md) — 도구 설치, 초기 폴더 구조, 타입 예시, 환경 점검 방법
-- [개발 TODO](TODO.md) — 단계별 우선순위, 작업 목록, 완료 조건
+- [아키텍처](docs/ARCHITECTURE.md) — 실행 구조, 기능별 책임과 보류 중인 결정
+- [개발 환경 구성 가이드](docs/ENVIRONMENT_SETUP.md) — 도구 설치, 초기 폴더 구조, 타입 예시, 환경 점검 방법
+- [개발 TODO](docs/TODO.md) — 단계별 우선순위, 작업 목록, 완료 조건
 - [커밋 메시지 규칙](docs/COMMIT_CONVENTION.md) — 유형별 이모지, 제목 형식과 작성 예시

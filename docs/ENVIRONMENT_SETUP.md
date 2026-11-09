@@ -1,7 +1,7 @@
 # Marketing AI Agent — 로컬 개발 환경 구성 가이드
 
 > 작성일: 2026-11-09<br>
-> 기준: [TRACK 2 과제 안내서](docs/track-2-marketing-agent.pdf)
+> 기준: [TRACK 2 과제 안내서](track-2-marketing-agent.pdf)
 
 ## 0. 목표 및 결정 범위
 
@@ -102,9 +102,10 @@ marketing-ai-agent/
 │   ├── comment/     # 댓글 검토, 작업 상태, 중복 방지, 이력
 │   ├── browser/     # 로컬 Chrome 연동
 │   └── global/      # 공통 설정 및 예외 처리
-├── docs/
-├── ENVIRONMENT_SETUP.md
-└── TODO.md
+└── docs/
+    ├── ARCHITECTURE.md
+    ├── ENVIRONMENT_SETUP.md
+    └── TODO.md
 ```
 
 각 기능을 구현할 때 필요한 클래스만 추가한다. 빈 Controller, Service, Repository를 미리 생성하지 않는다.
