@@ -1,3 +1,4 @@
+import { YouTubeWorkspace } from './features/video/YouTubeWorkspace'
 import { JobPanel } from './features/comment/JobPanel'
 import { DraftEditor } from './features/analysis/DraftEditor'
 import { videos } from './features/video/examples'
@@ -5,6 +6,7 @@ import { VideoList } from './features/video/VideoList'
 import { useEffect, useState } from 'react'
 
 export default function App() {
+  const [source, setSource] = useState('example')
   const [listState, setListState] = useState('ready')
   const [selected, select] = useState(videos[0].id)
   const [edits, setEdits] = useState<Record<string, string>>({})
@@ -31,7 +33,7 @@ export default function App() {
   }, [])
 
   return <main>
-    <header><h1>댓글 작업실</h1><span>예시 데이터</span></header>
+    <header><h1>댓글 작업실</h1><span>{source === 'example' ? '예시 데이터' : 'YouTube 실제 조회'}</span></header><label>데이터 소스 <select value={source} onChange={event => setSource(event.target.value)}><option value="example">예시 영상</option><option value="youtube">YouTube 검색</option></select></label>{source === 'youtube' ? <YouTubeWorkspace /> : <>
     <label className="scenario">목록 예시 <select value={listState} onChange={e => setListState(e.target.value)}>
       <option value="ready">영상 있음</option><option value="empty">빈 목록</option>
       <option value="loading">불러오는 중</option><option value="error">조회 오류</option>
@@ -45,6 +47,6 @@ export default function App() {
       <section><h2>분석과 초안</h2><DraftEditor key={selected} video={video} draft={edits[selected] ?? video.draft} onEdit={text => setEdits(previous => ({ ...previous, [selected]: text }))} /></section>
       <section><h2>작업 상태</h2><JobPanel video={video} draft={edits[selected] ?? video.draft} /></section>
     </div>
-    <footer>{message}</footer>
+    </>}<footer>{message}</footer>
   </main>
 }

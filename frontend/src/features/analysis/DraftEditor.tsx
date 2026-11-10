@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Video } from '../video/examples'
 
-export function DraftEditor({ video, draft, onEdit }: { video: Video; draft: string; onEdit: (text: string) => void }) {
+export function DraftEditor({ video, draft, onEdit, actualVideo = false }: { video: Video; draft: string; onEdit: (text: string) => void; actualVideo?: boolean }) {
   const length = Array.from(draft.trim()).length
   const valid = length >= 40 && length <= 120
+  const [evidence, setEvidence] = useState(video.evidence)
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState('')
   const request = useRef<AbortController | null>(null)
@@ -19,7 +20,7 @@ export function DraftEditor({ video, draft, onEdit }: { video: Video; draft: str
     try {
       const response = await fetch('/api/analysis/draft', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: video.title, evidence: video.evidence }),
+        body: JSON.stringify({ title: video.title, evidence: evidence.trim() }),
         signal: controller.signal,
       })
       const data = await response.json()
@@ -40,9 +41,9 @@ export function DraftEditor({ video, draft, onEdit }: { video: Video; draft: str
 
   return <>
     <h3>{video.title}</h3><p>{video.concern}</p>
-    <blockquote>{video.evidence}</blockquote>
-    <p>예시 영상의 근거를 사용해 실제 AI 초안을 생성합니다.</p>
-    <button disabled={pending} onClick={() => void generate()}>{pending ? '생성 중…' : 'AI 초안 생성·재생성'}</button>
+    <label htmlFor="evidence">확인한 영상 근거</label><textarea id="evidence" value={evidence} maxLength={10000} disabled={pending} onChange={event => setEvidence(event.target.value)} rows={3} />
+    <p>{actualVideo ? '직접 확인한 영상 근거를 입력하면 AI 초안을 생성할 수 있습니다. 자막은 자동 수집하지 않습니다.' : '예시 영상의 근거를 사용해 실제 AI 초안을 생성합니다.'}</p>
+    <button disabled={pending || !evidence.trim()} onClick={() => void generate()}>{pending ? '생성 중…' : 'AI 초안 생성·재생성'}</button>
     <p role="status">{message}</p>
     <label htmlFor="draft">댓글 초안</label>
     <textarea id="draft" value={draft} disabled={pending} onChange={e => onEdit(e.target.value)} rows={5} aria-invalid={!valid} aria-describedby="length" />
