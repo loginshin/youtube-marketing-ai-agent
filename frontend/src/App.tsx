@@ -1,12 +1,21 @@
+import { PromptSettings } from './features/analysis/PromptSettings'
 import { useState } from 'react'
 import { ExampleWorkspace } from './features/video/ExampleWorkspace'
 import { YouTubeWorkspace } from './features/video/YouTubeWorkspace'
 import { useServerHealth } from './shared/useServerHealth'
 
 export default function App() {
-  const [example, setExample] = useState(false)
+  const [workspace, setWorkspace] = useState<'video' | 'example' | 'prompt'>(
+    'video',
+  )
+  const [visitedPrompt, setVisitedPrompt] = useState(false)
+  const example = workspace === 'example'
   const health = useServerHealth()
-  const page = example ? '예시 작업실' : '영상 작업실'
+  const page = {
+    video: '영상 작업실',
+    example: '예시 작업실',
+    prompt: '프롬프트 설정',
+  }[workspace]
 
   return (
     <div className="shell">
@@ -17,16 +26,25 @@ export default function App() {
         </div>
         <nav aria-label="작업 공간">
           <button
-            aria-current={!example ? 'page' : undefined}
-            onClick={() => setExample(false)}
+            aria-current={workspace === 'video' ? 'page' : undefined}
+            onClick={() => setWorkspace('video')}
           >
             <span aria-hidden="true">▸</span> 영상 작업실
           </button>
           <button
             aria-current={example ? 'page' : undefined}
-            onClick={() => setExample(true)}
+            onClick={() => setWorkspace('example')}
           >
             <span aria-hidden="true">▦</span> 예시 작업실
+          </button>
+          <button
+            aria-current={workspace === 'prompt' ? 'page' : undefined}
+            onClick={() => {
+              setVisitedPrompt(true)
+              setWorkspace('prompt')
+            }}
+          >
+            프롬프트 설정
           </button>
         </nav>
       </aside>
@@ -37,10 +55,15 @@ export default function App() {
         </header>
         <main>
           <h1>{page}</h1>
-          <div hidden={example}>
+          <div hidden={workspace !== 'video'}>
             <YouTubeWorkspace />
           </div>
           <ExampleWorkspace active={example} />
+          {visitedPrompt && (
+            <div hidden={workspace !== 'prompt'}>
+              <PromptSettings />
+            </div>
+          )}
         </main>
       </div>
     </div>
