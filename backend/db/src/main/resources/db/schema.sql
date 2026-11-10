@@ -21,3 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_comment_job_event_history ON comment_job_event(jo
 
 -- Allow 120 Unicode code points including supplementary characters in H2.
 ALTER TABLE comment_job ALTER COLUMN body SET DATA TYPE VARCHAR(240);
+
+CREATE TABLE IF NOT EXISTS approval_guard (id INTEGER PRIMARY KEY);
+MERGE INTO approval_guard (id) KEY (id) VALUES (1);
+CREATE INDEX IF NOT EXISTS idx_comment_job_created ON comment_job(created_at);
