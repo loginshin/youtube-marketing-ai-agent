@@ -3,6 +3,9 @@ package com.marketing.agent.analysis.presentation;
 import com.marketing.agent.ai.DraftService;
 import com.marketing.agent.ai.VideoSummaryService;
 import java.util.List;
+import com.marketing.agent.analysis.application.CommentPromptService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,9 +18,22 @@ public class AnalysisController {
 
     private final VideoSummaryService summaries;
 
-    public AnalysisController(DraftService drafts, VideoSummaryService summaries) {
+    private final CommentPromptService prompts;
+
+    public AnalysisController(DraftService drafts, VideoSummaryService summaries, CommentPromptService prompts) {
         this.drafts = drafts;
         this.summaries = summaries;
+        this.prompts = prompts;
+    }
+
+    @GetMapping("/draft/prompt")
+    public CommentPromptService.Settings prompt() {
+        return prompts.current();
+    }
+
+    @PutMapping("/draft/prompt")
+    public CommentPromptService.Settings savePrompt(@RequestBody CommentPromptService.Settings settings) {
+        return prompts.save(settings);
     }
 
     @PostMapping("/draft")
@@ -27,7 +43,7 @@ public class AnalysisController {
                 || request.evidence().length() > 10000) {
             throw new IllegalArgumentException("제목(1~300자)과 확인 가능한 근거(1~10,000자)가 필요합니다.");
         }
-        return new DraftResponse(drafts.generate(request.title(), request.evidence()));
+        return new DraftResponse(drafts.generate(request.title(), request.evidence(), prompts.current().instructions()));
     }
 
     @PostMapping("/summary")
