@@ -75,3 +75,28 @@ Copy-Item .env.example .env # 처음 한 번만 실행; 기존 .env가 있으면
 ```powershell
 .\gradlew.bat :api:test --tests '*ApprovalConcurrencyTests'
 ```
+
+## Docker DB와 IntelliJ 실행
+
+Docker Desktop을 실행한 뒤 저장소 루트에서 다음 명령으로 PostgreSQL만 실행합니다.
+
+~~~powershell
+docker compose up -d db
+docker compose ps
+~~~
+
+IntelliJ에서 MarketingAgentApplication의 Spring Boot 실행 구성을 만듭니다.
+JDK는 21, 클래스패스 모듈은 backend.api.main, Working directory는 backend 디렉터리로 설정합니다.
+Active profiles에 local을 입력합니다. Active profiles 항목이 없으면 VM options에 -Dspring.profiles.active=local을 추가합니다.
+backend/.env의 API 키를 입력하고 Run을 누르세요.
+
+DBeaver에서는 PostgreSQL 연결을 만들고 localhost:5432, Database marketing_agent, Username marketing, Password marketing_local을 입력합니다.
+백엔드를 실행한 상태에서도 DB를 조회할 수 있습니다.
+비밀번호는 로컬 개발용이며 compose.yaml과 application-local.properties가 동일해야 합니다.
+기존 H2 데이터는 별도로 유지되고 PostgreSQL에는 새 데이터가 저장됩니다.
+
+~~~powershell
+docker compose stop db
+~~~
+
+위 명령은 DB만 종료하고 볼륨의 데이터를 유지합니다.
