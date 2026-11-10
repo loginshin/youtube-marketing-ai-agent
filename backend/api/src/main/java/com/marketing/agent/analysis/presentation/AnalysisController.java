@@ -1,6 +1,8 @@
 package com.marketing.agent.analysis.presentation;
 
 import com.marketing.agent.ai.DraftService;
+import com.marketing.agent.ai.VideoSummaryService;
+import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,8 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AnalysisController {
     private final DraftService drafts;
 
-    public AnalysisController(DraftService drafts) {
+    private final VideoSummaryService summaries;
+
+    public AnalysisController(DraftService drafts, VideoSummaryService summaries) {
         this.drafts = drafts;
+        this.summaries = summaries;
     }
 
     @PostMapping("/draft")
@@ -25,6 +30,12 @@ public class AnalysisController {
         return new DraftResponse(drafts.generate(request.title(), request.evidence()));
     }
 
+    @PostMapping("/summary")
+    public VideoSummaryService.Result summarize(@RequestBody SummaryRequest request) {
+        return summaries.summarize(request.title(), request.description(), request.comments());
+    }
+
+    public record SummaryRequest(String title, String description, List<String> comments) {}
     public record DraftRequest(String title, String evidence) {}
     public record DraftResponse(String draft) {}
 }
