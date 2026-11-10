@@ -1,3 +1,4 @@
+import { ApprovalPanel } from '../comment/ApprovalPanel'
 import { VideoSummaryPanel } from '../analysis/VideoSummaryPanel'
 import { useState } from 'react'
 import { DraftEditor } from '../analysis/DraftEditor'
@@ -109,7 +110,16 @@ export function YouTubeWorkspace() {
         </section>
         <section>
           <h2>작업 상태</h2>
-          <p>초안 검토 단계입니다. 실제 댓글 게시는 아직 지원하지 않습니다.</p>
+          {video ? (
+            <ApprovalPanel
+              key={video.id}
+              videoId={video.id}
+              title={video.title}
+              draft={drafts[video.id] ?? ''}
+            />
+          ) : (
+            <p>영상을 선택하면 승인 본문과 이력을 확인할 수 있습니다.</p>
+          )}
         </section>
       </div>
     </>
