@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
 
-type Settings = { instructions: string; version: number }
+type Settings = {
+  instructions: string
+  version: number
+  modelTier: string
+  models: { tier: string; label: string; modelId: string }[]
+}
 const endpoint = '/api/analysis/draft/prompt'
 
 export function PromptSettings() {
   const [saved, setSaved] = useState<Settings | null>(null)
   const [text, setText] = useState('')
+  const [modelTier, setModelTier] = useState('')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(true)
   const [reload, setReload] = useState(0)
@@ -25,6 +31,7 @@ export function PromptSettings() {
         if (controller.signal.aborted) return
         setSaved(value)
         setText(value.instructions)
+        setModelTier(value.modelTier)
         setConflict(false)
         setMessage('')
       } catch {
@@ -45,7 +52,7 @@ export function PromptSettings() {
       const response = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instructions: text, version: saved.version }),
+        body: JSON.stringify({ instructions: text, modelTier, version: saved.version }),
       })
       if (response.status === 409) {
         setConflict(true)
@@ -58,7 +65,8 @@ export function PromptSettings() {
       const value: Settings = await response.json()
       setSaved(value)
       setText(value.instructions)
-      setMessage('저장했습니다. 다음 초안 생성부터 적용됩니다.')
+      setModelTier(value.modelTier)
+      setMessage('저장했습니다. 다음 영상 분석과 초안 생성부터 적용됩니다.')
     } catch {
       setMessage('저장 결과를 확인하지 못했습니다. 다시 시도해주세요.')
     } finally {
@@ -68,6 +76,20 @@ export function PromptSettings() {
 
   return (
     <section className="prompt-settings">
+      <label htmlFor="ai-model">OpenAI 모델</label>
+      <select
+        id="ai-model"
+        value={modelTier}
+        disabled={busy || !saved}
+        onChange={(event) => {
+          setModelTier(event.target.value)
+          if (!conflict) setMessage('')
+        }}
+      >
+        {saved?.models.map(({ tier, label, modelId }) => (
+          <option key={tier} value={tier}>{label} · {modelId}</option>
+        ))}
+      </select>
       <label htmlFor="prompt-instructions">댓글 초안 작성 지침</label>
       <p>
         말투, 강조할 내용, 브랜드 표현을 입력하세요. 영상 근거와 40~120자 작성
@@ -93,10 +115,10 @@ export function PromptSettings() {
           conflict ||
           !saved ||
           !text.trim() ||
-          text.trim() === saved.instructions
+          (text.trim() === saved.instructions && modelTier === saved.modelTier)
         }
       >
-        지침 저장
+        설정 저장
       </button>
       {(!saved || conflict) && !busy && (
         <button onClick={() => setReload((n) => n + 1)}>

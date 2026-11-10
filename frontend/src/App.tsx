@@ -14,7 +14,7 @@ export default function App() {
   const page = {
     video: '영상 작업실',
     example: '예시 작업실',
-    prompt: '프롬프트 설정',
+    prompt: 'AI 설정',
   }[workspace]
 
   return (
@@ -44,7 +44,7 @@ export default function App() {
               setWorkspace('prompt')
             }}
           >
-            프롬프트 설정
+            AI 설정
           </button>
         </nav>
       </aside>

@@ -49,7 +49,7 @@ Vite가 표시한 주소를 열면 API 키 없이 서버 연결 상태를 확인
 - `backend/ai`: OpenAI Responses API 호출 클라이언트 (DB 의존 없음)
 - `sql/`: 초기 스키마와 [DBeaver 조회 쿼리](sql/inspect-postgres.sql). JPA 엔티티와 저장소는 API 모듈에 포함됩니다.
 
-`backend/.env.example`을 `backend/.env`로 복사한 뒤 `OPENAI_API_KEY=` 뒤에 키를 입력합니다. 따옴표 없이 작성하고 서버를 재시작하세요. `OPENAI_MODEL`로 모델을 변경할 수 있으며, `YOUTUBE_API_KEY`는 YouTube Data API v3를 활성화한 프로젝트의 키입니다. OS 환경 변수는 `.env`보다 우선합니다. 실제 `.env`는 Git에서 제외됩니다.
+`backend/.env.example`을 `backend/.env`로 복사한 뒤 `OPENAI_API_KEY=` 뒤에 키를 입력합니다. 따옴표 없이 작성하고 서버를 재시작하세요. `YOUTUBE_API_KEY`는 YouTube Data API v3를 활성화한 프로젝트의 키입니다. OS 환경 변수는 `.env`보다 우선합니다. 실제 `.env`는 Git에서 제외됩니다.
 
 ```powershell
 cd backend
@@ -102,4 +102,4 @@ docker compose stop db
 위 명령은 DB만 종료하고 볼륨의 데이터를 유지합니다.
 
 
-**프롬프트 설정**에서 댓글 초안의 말투와 강조할 내용을 수정할 수 있습니다. 저장한 지침은 생성·재생성할 때 적용됩니다. 백엔드를 재시작하면 초기 SQL이 `comment_prompt` 테이블을 준비하며, 기존 지침은 유지합니다. DBeaver에서는 `sql/inspect-postgres.sql`의 8번 쿼리로 현재 지침을 확인하세요.
+**AI 설정**에서 영상 분석과 초안 생성에 사용할 모델(고품질·보통·가성비, 기본값 보통)을 선택하고 댓글 초안의 말투와 강조할 내용을 수정할 수 있습니다. 저장한 지침은 생성·재생성할 때 적용됩니다. 백엔드를 재시작하면 초기 SQL이 `comment_prompt` 테이블을 준비하며, 기존 지침은 유지합니다. DBeaver에서는 `sql/inspect-postgres.sql`의 8번 쿼리로 현재 지침을 확인하세요.
