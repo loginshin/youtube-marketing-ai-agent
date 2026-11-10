@@ -5,16 +5,19 @@ export function DraftEditor({
   video,
   draft,
   onEdit,
+  evidence,
+  onEvidenceChange,
   actualVideo = false,
 }: {
   video: Video
   draft: string
   onEdit: (text: string) => void
+  evidence: string
+  onEvidenceChange: (text: string) => void
   actualVideo?: boolean
 }) {
   const length = Array.from(draft.trim()).length
   const valid = length >= 40 && length <= 120
-  const [evidence, setEvidence] = useState(video.evidence)
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState('')
   const request = useRef<AbortController | null>(null)
@@ -67,7 +70,7 @@ export function DraftEditor({
         value={evidence}
         maxLength={10000}
         disabled={pending}
-        onChange={(event) => setEvidence(event.target.value)}
+        onChange={(event) => onEvidenceChange(event.target.value)}
         rows={3}
       />
       <p>

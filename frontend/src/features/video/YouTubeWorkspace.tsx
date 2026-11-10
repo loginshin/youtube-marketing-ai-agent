@@ -9,6 +9,7 @@ export function YouTubeWorkspace() {
   const { query, setQuery, items, detail, busy, message, load } =
     useVideoSearch()
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [evidenceById, setEvidenceById] = useState<Record<string, string>>({})
   const video: Video | null = detail
     ? {
         ...detail,
@@ -81,6 +82,8 @@ export function YouTubeWorkspace() {
               <DraftEditor
                 key={video.id}
                 video={video}
+                evidence={evidenceById[video.id] ?? video.evidence}
+                onEvidenceChange={text => setEvidenceById(previous => ({ ...previous, [video.id]: text }))}
                 draft={drafts[video.id] ?? ''}
                 onEdit={(text) =>
                   setDrafts((previous) => ({ ...previous, [video.id]: text }))

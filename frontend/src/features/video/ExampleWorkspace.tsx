@@ -8,6 +8,7 @@ export function ExampleWorkspace({ active }: { active: boolean }) {
   const [listState, setListState] = useState('ready')
   const [selected, select] = useState(videos[0].id)
   const [edits, setEdits] = useState<Record<string, string>>({})
+  const [evidenceById, setEvidenceById] = useState<Record<string, string>>({})
   const video = videos.find((v) => v.id === selected)!
   if (!active) return null
   return (
@@ -49,6 +50,8 @@ export function ExampleWorkspace({ active }: { active: boolean }) {
           <DraftEditor
             key={selected}
             video={video}
+            evidence={evidenceById[selected] ?? video.evidence}
+            onEvidenceChange={text => setEvidenceById(previous => ({ ...previous, [selected]: text }))}
             draft={edits[selected] ?? video.draft}
             onEdit={(text) =>
               setEdits((previous) => ({ ...previous, [selected]: text }))
