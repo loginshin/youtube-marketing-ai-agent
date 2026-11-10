@@ -64,3 +64,6 @@ Copy-Item .env.example .env # 처음 한 번만 실행; 기존 .env가 있으면
 연동 기준: [OpenAI 공식 API 문서](https://developers.openai.com/api/reference/overview), [Responses API 시작 가이드](https://developers.openai.com/api/docs/quickstart).
 
 초안 API: `POST /api/analysis/draft`. JSON 요청은 `{"title":"영상 제목","evidence":"확인 가능한 근거"}`, 응답은 `{"draft":"생성된 댓글"}`입니다. 제목·근거 입력 오류는 400, 키 미설정·생성 형식 오류는 503, 외부 API 실패는 502를 반환합니다.
+
+
+실제 영상을 선택한 뒤 **AI 고민 요약**을 누르면 영상 설명과 공개 댓글을 분석합니다. 요약과 함께 원문 인용 및 출처를 표시합니다. 자료가 부족하면 검토 안내가 표시됩니다. 댓글 초안에 사용할 영상 근거는 편집기에서 직접 확인하고 입력하세요.
