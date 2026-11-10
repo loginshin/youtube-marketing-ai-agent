@@ -18,7 +18,7 @@ tasks.named('bootRun') { workingDir rootProject.projectDir }
 // Package only the startup schemas. Inspection queries are run from DBeaver.
 tasks.named('processResources') {
     from(rootProject.file('../sql')) {
-        include 'schema.sql', 'schema-postgres.sql'
+        include 'schema.sql', 'schema-postgres.sql', 'comment-prompt.sql'
         into 'db'
     }
 }
