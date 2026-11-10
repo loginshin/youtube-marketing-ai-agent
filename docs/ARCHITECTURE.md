@@ -1,6 +1,6 @@
 # 마케팅 AI 에이전트 아키텍처
 
-STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vite 개발 프록시를 통해 Spring Boot의 `GET /actuator/health`를 호출한다. STEP 1에서 3단 예시 대시보드를 구현했다. 다음 단계는 YouTube 데이터 연동이다. [실행 가이드](ENVIRONMENT_SETUP.md) · [단계별 구현 계획](TODO.md)
+STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vite 개발 프록시를 통해 Spring Boot의 `GET /actuator/health`를 호출한다. STEP 1에서 3단 예시 대시보드를 구현했다. YouTube 검색 화면은 설명과 공개 댓글을 조회하고, 사용자가 확인한 근거로 AI 초안을 요청한다. [실행 가이드](ENVIRONMENT_SETUP.md) · [단계별 구현 계획](TODO.md)
 
 ## 1. 확정한 기술·아키텍처 결정
 
@@ -121,3 +121,8 @@ backend/api/src/main/java/com/marketing/agent/
 게시 확인에 실패한 작업은 결과 확인 대기로 보관한다. 확인 전에는 같은 영상에 새 작업을 허용하지 않는다. 구체적인 상태 전이와 재시도 정책은 STEP 4에서 확정한다.
 
 백엔드 Gradle 모듈은 api, ai, db로 나눈다. api만 실행 애플리케이션이며 ai와 db에 의존한다. ai와 db는 서로 의존하지 않는다. 키 설정과 실행법은 루트 README를 따른다.
+
+
+영상 조회는 `VideoController`에서 HTTP 요청을 받고 `VideoQueryService`에서 검색 입력 검증과 영상·댓글 조회를 조합한다. `YouTubeClient`가 외부 API 통신을 담당한다. 각 기능의 HTTP 오류 응답은 해당 컨트롤러에 적용되는 예외 처리기에서 정의한다.
+
+`backend/db`의 `CommentJobRepository`와 `CommentJobEventRepository`는 기존 작업·이력 엔티티에 대한 Spring Data JPA 저장소다.
