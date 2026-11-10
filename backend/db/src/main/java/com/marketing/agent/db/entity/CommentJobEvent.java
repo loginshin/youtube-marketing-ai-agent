@@ -37,5 +37,8 @@ public class CommentJobEvent {
         this.screenshotPath = screenshotPath;
     }
 
+    public JobStatus getStatus() { return status; }
+    public Instant getOccurredAt() { return occurredAt; }
+
     public Long getId() { return id; }
 }

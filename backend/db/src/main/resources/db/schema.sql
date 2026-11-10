@@ -18,3 +18,6 @@ CREATE TABLE IF NOT EXISTS comment_job_event (
 );
 
 CREATE INDEX IF NOT EXISTS idx_comment_job_event_history ON comment_job_event(job_id, occurred_at, id);
+
+-- Allow 120 Unicode code points including supplementary characters in H2.
+ALTER TABLE comment_job ALTER COLUMN body SET DATA TYPE VARCHAR(240);

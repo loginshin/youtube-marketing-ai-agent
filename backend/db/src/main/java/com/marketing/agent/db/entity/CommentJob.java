@@ -16,7 +16,7 @@ public class CommentJob {
     @Column(nullable = false, length = 128)
     private String profileName;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = 240)
     private String body;
 
     @Version
@@ -38,6 +38,12 @@ public class CommentJob {
         this.createdAt = createdAt;
         this.status = JobStatus.APPROVED;
     }
+
+    public String getVideoId() { return videoId; }
+    public String getProfileName() { return profileName; }
+    public String getBody() { return body; }
+    public JobStatus getStatus() { return status; }
+    public Instant getCreatedAt() { return createdAt; }
 
     public Long getId() { return id; }
 }
