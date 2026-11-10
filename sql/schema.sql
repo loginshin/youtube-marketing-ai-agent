@@ -25,3 +25,11 @@ ALTER TABLE comment_job ALTER COLUMN body SET DATA TYPE VARCHAR(240);
 CREATE TABLE IF NOT EXISTS approval_guard (id INTEGER PRIMARY KEY);
 MERGE INTO approval_guard (id) KEY (id) VALUES (1);
 CREATE INDEX IF NOT EXISTS idx_comment_job_created ON comment_job(created_at);
+
+CREATE TABLE IF NOT EXISTS comment_prompt (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    instructions VARCHAR(4000) NOT NULL,
+    version BIGINT NOT NULL DEFAULT 0
+);
+INSERT INTO comment_prompt (id, instructions)
+SELECT 1, '근거의 구체적인 내용을 반영하고 운명원 연애 사주에 대한 관심을 자연스럽게 표현하세요.' WHERE NOT EXISTS (SELECT 1 FROM comment_prompt WHERE id = 1);
