@@ -4,29 +4,45 @@ import { YouTubeWorkspace } from './features/video/YouTubeWorkspace'
 import { useServerHealth } from './shared/useServerHealth'
 
 export default function App() {
-  const [source, setSource] = useState('example')
-  const message = useServerHealth()
-  const usingExamples = source === 'example'
+  const [example, setExample] = useState(false)
+  const health = useServerHealth()
+  const page = example ? '예시 작업실' : '영상 작업실'
 
   return (
-    <main>
-      <header>
-        <h1>댓글 작업실</h1>
-        <span>{usingExamples ? '예시 데이터' : 'YouTube 실제 조회'}</span>
-      </header>
-      <label>
-        데이터 소스
-        <select
-          value={source}
-          onChange={(event) => setSource(event.target.value)}
-        >
-          <option value="example">예시 영상</option>
-          <option value="youtube">YouTube 검색</option>
-        </select>
-      </label>
-      <ExampleWorkspace active={usingExamples} />
-      {!usingExamples && <YouTubeWorkspace />}
-      <footer>{message}</footer>
-    </main>
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <img src="/favicon.svg" width="32" height="32" alt="" />
+          클립데스크
+        </div>
+        <nav aria-label="작업 공간">
+          <button
+            aria-current={!example ? 'page' : undefined}
+            onClick={() => setExample(false)}
+          >
+            <span aria-hidden="true">▸</span> 영상 작업실
+          </button>
+          <button
+            aria-current={example ? 'page' : undefined}
+            onClick={() => setExample(true)}
+          >
+            <span aria-hidden="true">▦</span> 예시 작업실
+          </button>
+        </nav>
+      </aside>
+      <div className="content">
+        <header className="topbar">
+          <span>워크스페이스 ／ {page}</span>
+          <small>{health}</small>
+        </header>
+        <main>
+          <h1>{page}</h1>
+          <div hidden={example}>
+            <YouTubeWorkspace />
+          </div>
+          <ExampleWorkspace active={example} />
+        </main>
+      </div>
+    </div>
   )
 }

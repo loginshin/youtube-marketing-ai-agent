@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { Video } from '../video/examples'
 
 export function DraftEditor({
@@ -16,6 +16,10 @@ export function DraftEditor({
   onEvidenceChange: (text: string) => void
   actualVideo?: boolean
 }) {
+  const editorId = useId()
+  const evidenceId = editorId + '-evidence'
+  const draftId = editorId + '-draft'
+  const lengthId = editorId + '-length'
   const length = Array.from(draft.trim()).length
   const valid = length >= 40 && length <= 120
   const [pending, setPending] = useState(false)
@@ -64,9 +68,9 @@ export function DraftEditor({
     <>
       <h3>{video.title}</h3>
       <p>{video.concern}</p>
-      <label htmlFor="evidence">확인한 영상 근거</label>
+      <label htmlFor={evidenceId}>확인한 영상 근거</label>
       <textarea
-        id="evidence"
+        id={evidenceId}
         value={evidence}
         maxLength={10000}
         disabled={pending}
@@ -85,17 +89,17 @@ export function DraftEditor({
         {pending ? '생성 중…' : 'AI 초안 생성·재생성'}
       </button>
       <p role="status">{message}</p>
-      <label htmlFor="draft">댓글 초안</label>
+      <label htmlFor={draftId}>댓글 초안</label>
       <textarea
-        id="draft"
+        id={draftId}
         value={draft}
         disabled={pending}
         onChange={(e) => onEdit(e.target.value)}
         rows={5}
         aria-invalid={!valid}
-        aria-describedby="length"
+        aria-describedby={lengthId}
       />
-      <small id="length" aria-live="polite">
+      <small id={lengthId} aria-live="polite">
         {length}자 · {valid ? '글자 수 충족' : '40~120자로 작성하세요'}
       </small>
     </>
