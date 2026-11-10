@@ -52,4 +52,4 @@ LIMIT 100;
 SELECT id FROM public.approval_guard ORDER BY id;
 
 -- 8. 다음 댓글 초안 생성에 적용되는 작성 지침과 수정 버전
-SELECT instructions, version FROM public.comment_prompt WHERE id = 1;
+SELECT model_tier, instructions, version FROM public.comment_prompt WHERE id = 1;

@@ -25,7 +25,7 @@ public class VideoSummaryService {
         this.json = json;
     }
 
-    public Result summarize(String title, String description, List<String> comments) {
+    public Result summarize(String title, String description, List<String> comments, ModelTier model) {
         if (title == null || title.isBlank() || title.length() > 300
                 || description == null || description.length() > 10000
                 || comments == null || comments.size() > 5) {
@@ -42,7 +42,7 @@ public class VideoSummaryService {
         }
         if (sources.isEmpty()) return Result.insufficient();
 
-        String response = client.generate(INSTRUCTIONS, json.writeValueAsString(new Input(title, sources)));
+        String response = client.generate(model, INSTRUCTIONS, json.writeValueAsString(new Input(title, sources)));
         Candidate candidate;
         try {
             candidate = json.readValue(response, Candidate.class);

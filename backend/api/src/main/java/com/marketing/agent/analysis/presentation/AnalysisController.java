@@ -32,7 +32,7 @@ public class AnalysisController {
     }
 
     @PutMapping("/draft/prompt")
-    public CommentPromptService.Settings savePrompt(@RequestBody CommentPromptService.Settings settings) {
+    public CommentPromptService.Settings savePrompt(@RequestBody CommentPromptService.Update settings) {
         return prompts.save(settings);
     }
 
@@ -43,12 +43,13 @@ public class AnalysisController {
                 || request.evidence().length() > 10000) {
             throw new IllegalArgumentException("제목(1~300자)과 확인 가능한 근거(1~10,000자)가 필요합니다.");
         }
-        return new DraftResponse(drafts.generate(request.title(), request.evidence(), prompts.current().instructions()));
+        var settings = prompts.current();
+        return new DraftResponse(drafts.generate(request.title(), request.evidence(), settings.instructions(), settings.modelTier()));
     }
 
     @PostMapping("/summary")
     public VideoSummaryService.Result summarize(@RequestBody SummaryRequest request) {
-        return summaries.summarize(request.title(), request.description(), request.comments());
+        return summaries.summarize(request.title(), request.description(), request.comments(), prompts.current().modelTier());
     }
 
     public record SummaryRequest(String title, String description, List<String> comments) {}

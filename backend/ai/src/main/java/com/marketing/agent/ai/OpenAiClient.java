@@ -14,12 +14,9 @@ import org.springframework.web.client.RestClient;
 public class OpenAiClient {
     private final RestClient client;
     private final String apiKey;
-    private final String model;
 
-    public OpenAiClient(@Value("${agent.ai.api-key:}") String apiKey,
-                        @Value("${agent.ai.model:gpt-4.1-mini}") String model) {
+    public OpenAiClient(@Value("${agent.ai.api-key:}") String apiKey) {
         this.apiKey = apiKey;
-        this.model = model;
         var factory = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10)).build());
         factory.setReadTimeout(Duration.ofSeconds(60));
@@ -27,13 +24,13 @@ public class OpenAiClient {
                 .requestFactory(factory).build();
     }
 
-    public String generate(String instructions, String input) {
+    public String generate(ModelTier model, String instructions, String input) {
         if (apiKey.isBlank()) {
             throw new IllegalStateException("backend/.env에 OPENAI_API_KEY를 설정하세요.");
         }
         Response response = client.post().uri("/responses")
                 .headers(headers -> headers.setBearerAuth(apiKey))
-                .body(Map.of("model", model, "instructions", instructions,
+                .body(Map.of("model", model.modelId(), "instructions", instructions,
                         "input", input, "store", false, "max_output_tokens", 1000))
                 .retrieve().body(Response.class);
         if (response == null || !"completed".equals(response.status()) || response.output() == null) {

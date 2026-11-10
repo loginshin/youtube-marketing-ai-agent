@@ -1,3 +1,6 @@
+ALTER TABLE comment_prompt ADD COLUMN IF NOT EXISTS model_tier VARCHAR(16)
+    DEFAULT 'STANDARD' NOT NULL CHECK (model_tier IN ('PREMIUM', 'STANDARD', 'ECONOMY'));
+
 -- Upgrade only the original, untouched seed. A settings save increments version.
 UPDATE comment_prompt
 SET instructions = '선택한 영상의 제목과 확인된 근거를 읽고, 영상 속 인물이 연애에서 무엇을 고민하는지 먼저 짚으세요. 그 고민이 드러나는 구체적인 장면이나 발언을 하나 이상 골라, 어느 대목이 왜 마음에 걸리는지 시청자의 자연스러운 한국어 말투로 표현하세요.
