@@ -42,7 +42,7 @@ export default function App() {
     </section>}
     <div className="dashboard" hidden={listState !== 'ready'}>
       <section><h2>영상 목록</h2><VideoList selected={selected} onSelect={select} /></section>
-      <section><h2>분석과 초안</h2><DraftEditor video={video} draft={edits[selected] ?? video.draft} onEdit={text => setEdits(previous => ({ ...previous, [selected]: text }))} /></section>
+      <section><h2>분석과 초안</h2><DraftEditor key={selected} video={video} draft={edits[selected] ?? video.draft} onEdit={text => setEdits(previous => ({ ...previous, [selected]: text }))} /></section>
       <section><h2>작업 상태</h2><JobPanel video={video} draft={edits[selected] ?? video.draft} /></section>
     </div>
     <footer>{message}</footer>
