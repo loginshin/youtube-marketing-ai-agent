@@ -31,7 +31,8 @@ public class OpenAiClient {
         Response response = client.post().uri("/responses")
                 .headers(headers -> headers.setBearerAuth(apiKey))
                 .body(Map.of("model", model.modelId(), "instructions", instructions,
-                        "input", input, "store", false, "max_output_tokens", 1000))
+                        "input", input, "store", false, "max_output_tokens", 1000,
+                        "reasoning", Map.of("effort", model.reasoningEffort())))
                 .retrieve().body(Response.class);
         if (response == null || !"completed".equals(response.status()) || response.output() == null) {
             throw new IllegalStateException("AI 응답이 완료되지 않았습니다.");

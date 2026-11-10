@@ -1,5 +1,8 @@
 ALTER TABLE comment_prompt ADD COLUMN IF NOT EXISTS model_tier VARCHAR(16)
-    DEFAULT 'STANDARD' NOT NULL CHECK (model_tier IN ('PREMIUM', 'STANDARD', 'ECONOMY'));
+    DEFAULT 'STANDARD' NOT NULL;
+ALTER TABLE comment_prompt DROP CONSTRAINT IF EXISTS ck_comment_prompt_model;
+ALTER TABLE comment_prompt ADD CONSTRAINT ck_comment_prompt_model
+    CHECK (model_tier IN ('PREMIUM', 'STANDARD', 'ECONOMY', 'ASTRA', 'SOL'));
 
 -- Upgrade only the original, untouched seed. A settings save increments version.
 UPDATE comment_prompt

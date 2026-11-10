@@ -33,3 +33,12 @@ CREATE TABLE IF NOT EXISTS comment_prompt (
 );
 INSERT INTO comment_prompt (id, instructions)
 SELECT 1, '근거의 구체적인 내용을 반영하고 운명원 연애 사주에 대한 관심을 자연스럽게 표현하세요.' WHERE NOT EXISTS (SELECT 1 FROM comment_prompt WHERE id = 1);
+
+-- H2 generated a name for the original inline three-model check.
+EXECUTE IMMEDIATE 'ALTER TABLE comment_prompt DROP CONSTRAINT IF EXISTS ' ||
+    COALESCE((SELECT tc.constraint_name FROM information_schema.table_constraints tc
+              JOIN information_schema.check_constraints cc
+                ON cc.constraint_schema = tc.constraint_schema AND cc.constraint_name = tc.constraint_name
+              WHERE tc.table_schema = CURRENT_SCHEMA AND tc.table_name = 'COMMENT_PROMPT'
+                AND cc.check_clause LIKE '%"MODEL_TIER"%'
+                AND tc.constraint_name LIKE 'CONSTRAINT%'), 'legacy_model_tier_check');

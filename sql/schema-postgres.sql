@@ -31,3 +31,6 @@ CREATE TABLE IF NOT EXISTS comment_prompt (
 );
 INSERT INTO comment_prompt (id, instructions)
 VALUES (1, '근거의 구체적인 내용을 반영하고 운명원 연애 사주에 대한 관심을 자연스럽게 표현하세요.') ON CONFLICT (id) DO NOTHING;
+
+-- Replace the original three-model column check with the shared named constraint.
+ALTER TABLE comment_prompt DROP CONSTRAINT IF EXISTS comment_prompt_model_tier_check;
