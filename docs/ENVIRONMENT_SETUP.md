@@ -75,7 +75,7 @@ npm run build
 
 1. [Spring Initializr](https://start.spring.io/)에서 Gradle (Groovy), Java, Jar, Java 21을 선택한다. Group은 `com.marketing`, Artifact는 `backend`, Package name은 `com.marketing.agent`로 지정한다.
 2. 기준 조합은 Spring Boot 4.1.2와 Java 21이다. AI는 별도 ai 모듈에서 OpenAI Responses API를 직접 호출한다.
-3. STEP 0에는 Spring Web과 Actuator를 선택한다. ZIP을 풀어 루트 바로 아래 `backend/build.gradle`과 Gradle Wrapper가 위치하게 한다. 현재는 api, ai, db 멀티모듈이며 api가 실행 모듈이다. API 키 설정은 루트 README를 따른다.
+3. STEP 0에는 Spring Web과 Actuator를 선택한다. ZIP을 풀어 루트 바로 아래 `backend/build.gradle`과 Gradle Wrapper가 위치하게 한다. 현재는 api, ai 멀티모듈이며 api가 실행 모듈이다. API 키 설정은 루트 README를 따른다.
 4. 별도 터미널에서 서버를 실행한다. 아래는 Windows PowerShell 기준이며 macOS/Linux에서는 `./gradlew`를 사용한다.
 
 ```powershell
@@ -84,7 +84,7 @@ cd backend
 .\gradlew.bat :api:bootRun
 ```
 
-백엔드에서 bootRun을 실행하면 작업 디렉터리의 `data/`에 H2 파일이 생성된다. 시작할 때 db 모듈의 SQL로 테이블을 초기화하고 Hibernate가 매핑을 검증한다. 기존 테이블 구조 변경에는 별도 마이그레이션이 필요하다. 테스트는 메모리 DB를 사용한다.
+백엔드에서 bootRun을 실행하면 작업 디렉터리의 `data/`에 H2 파일이 생성된다. 시작할 때 루트 sql 폴더의 스키마 SQL로 테이블을 초기화하고 Hibernate가 매핑을 검증한다. 기존 테이블 구조 변경에는 별도 마이그레이션이 필요하다. 테스트는 메모리 DB를 사용한다.
 
 ### REST API 연결 검증
 
@@ -94,7 +94,7 @@ cd backend
 
 ```text
 marketing-ai-agent/
-├── backend/db/          # JPA 엔티티와 초기 SQL을 제공하는 Gradle 모듈
+├── sql/                 # 초기 스키마 및 조회 SQL
 ├── frontend/src/
 │   ├── features/{video,analysis,comment}/
 │   ├── components/

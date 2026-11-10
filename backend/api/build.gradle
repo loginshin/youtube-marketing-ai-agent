@@ -2,7 +2,6 @@ plugins { id 'org.springframework.boot' }
 
 dependencies {
     implementation project(':ai')
-    implementation project(':db')
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
@@ -15,3 +14,11 @@ dependencies {
 
 // Keep .env and the existing H2 database relative to backend/.
 tasks.named('bootRun') { workingDir rootProject.projectDir }
+
+// Package only the startup schemas. Inspection queries are run from DBeaver.
+tasks.named('processResources') {
+    from(rootProject.file('../sql')) {
+        include 'schema.sql', 'schema-postgres.sql'
+        into 'db'
+    }
+}

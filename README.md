@@ -45,9 +45,9 @@ Vite가 표시한 주소를 열면 API 키 없이 서버 연결 상태를 확인
 
 ## 백엔드 모듈과 API 키
 
-- `backend/api`: Spring Boot 실행 서버, API와 작업 흐름 (`api → ai`, `api → db`)
+- `backend/api`: Spring Boot 실행 서버, API와 작업 흐름 (`api → ai`)
 - `backend/ai`: OpenAI Responses API 호출 클라이언트 (DB 의존 없음)
-- `backend/db`: JPA 엔티티와 초기 SQL
+- `sql/`: 초기 스키마와 [DBeaver 조회 쿼리](sql/inspect-postgres.sql). JPA 엔티티와 저장소는 API 모듈에 포함됩니다.
 
 `backend/.env.example`을 `backend/.env`로 복사한 뒤 `OPENAI_API_KEY=` 뒤에 키를 입력합니다. 따옴표 없이 작성하고 서버를 재시작하세요. `OPENAI_MODEL`로 모델을 변경할 수 있으며, `YOUTUBE_API_KEY`는 YouTube Data API v3를 활성화한 프로젝트의 키입니다. OS 환경 변수는 `.env`보다 우선합니다. 실제 `.env`는 Git에서 제외됩니다.
 

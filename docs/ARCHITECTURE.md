@@ -17,7 +17,7 @@ STEP 0에서 로컬 개발 환경과 서버 연결을 검증했다. React가 Vit
 
 ### 영속 저장
 
-백엔드는 `backend/` 내부 Gradle 모듈 `:db`에 의존한다. 이 모듈은 JPA 엔티티와 [초기 스키마](../backend/db/src/main/resources/db/schema.sql)를 제공한다. 로컬 H2 파일에 영상별 작업 하나와 상태 변경 이력을 저장한다. 재시도는 같은 작업에 이력을 추가하는 방식으로 설계한다. 작업 상태 변경과 이력 추가는 한 트랜잭션에서 처리해야 한다.
+API 모듈에 JPA 엔티티가 있고 저장소 루트의 SQL 폴더에서 [초기 스키마](../sql/schema.sql)를 제공한다. 로컬 H2 파일에 영상별 작업 하나와 상태 변경 이력을 저장한다. 재시도는 같은 작업에 이력을 추가하는 방식으로 설계한다. 작업 상태 변경과 이력 추가는 한 트랜잭션에서 처리해야 한다.
 
 ### 현재 미확정 사항
 
@@ -120,9 +120,9 @@ backend/api/src/main/java/com/marketing/agent/
 
 게시 확인에 실패한 작업은 결과 확인 대기로 보관한다. 확인 전에는 같은 영상에 새 작업을 허용하지 않는다. 구체적인 상태 전이와 재시도 정책은 STEP 4에서 확정한다.
 
-백엔드 Gradle 모듈은 api, ai, db로 나눈다. api만 실행 애플리케이션이며 ai와 db에 의존한다. ai와 db는 서로 의존하지 않는다. 키 설정과 실행법은 루트 README를 따른다.
+백엔드 Gradle 모듈은 api, ai로 나눈다. api만 실행 애플리케이션이며 ai에 의존한다. 키 설정과 실행법은 루트 README를 따른다.
 
 
 영상 조회는 `VideoController`에서 HTTP 요청을 받고 `VideoQueryService`에서 검색 입력 검증과 영상·댓글 조회를 조합한다. `YouTubeClient`가 외부 API 통신을 담당한다. 각 기능의 HTTP 오류 응답은 해당 컨트롤러에 적용되는 예외 처리기에서 정의한다.
 
-`backend/db`의 `CommentJobRepository`와 `CommentJobEventRepository`는 기존 작업·이력 엔티티에 대한 Spring Data JPA 저장소다.
+`backend/api`의 `CommentJobRepository`와 `CommentJobEventRepository`는 기존 작업·이력 엔티티에 대한 Spring Data JPA 저장소다.
