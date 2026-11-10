@@ -51,7 +51,9 @@ export function ExampleWorkspace({ active }: { active: boolean }) {
             key={selected}
             video={video}
             evidence={evidenceById[selected] ?? video.evidence}
-            onEvidenceChange={text => setEvidenceById(previous => ({ ...previous, [selected]: text }))}
+            onEvidenceChange={(text) =>
+              setEvidenceById((previous) => ({ ...previous, [selected]: text }))
+            }
             draft={edits[selected] ?? video.draft}
             onEdit={(text) =>
               setEdits((previous) => ({ ...previous, [selected]: text }))

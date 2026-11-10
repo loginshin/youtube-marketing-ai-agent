@@ -1,3 +1,4 @@
+import { VideoSummaryPanel } from '../analysis/VideoSummaryPanel'
 import { useState } from 'react'
 import { DraftEditor } from '../analysis/DraftEditor'
 import { VideoList } from './VideoList'
@@ -79,11 +80,22 @@ export function YouTubeWorkspace() {
               ) : (
                 <p>조회 가능한 댓글이 없습니다.</p>
               )}
+              <VideoSummaryPanel
+                key={video.id}
+                title={detail.title}
+                description={detail.description}
+                comments={detail.comments}
+              />
               <DraftEditor
                 key={video.id}
                 video={video}
                 evidence={evidenceById[video.id] ?? video.evidence}
-                onEvidenceChange={text => setEvidenceById(previous => ({ ...previous, [video.id]: text }))}
+                onEvidenceChange={(text) =>
+                  setEvidenceById((previous) => ({
+                    ...previous,
+                    [video.id]: text,
+                  }))
+                }
                 draft={drafts[video.id] ?? ''}
                 onEdit={(text) =>
                   setDrafts((previous) => ({ ...previous, [video.id]: text }))
