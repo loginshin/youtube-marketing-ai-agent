@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class VideoAnalysisSettingsService {
     private static final List<Model> MODELS = List.of(
-            new Model("gemini-2.5-flash", "균형형", "gemini-2.5-flash"),
+            new Model("gemini-3.8-flash", "균형형", "gemini-3.8-flash"),
             new Model("gemini-2.5-pro", "고품질", "gemini-2.5-pro"));
     private final VideoAnalysisSettingsRepository repository;
 

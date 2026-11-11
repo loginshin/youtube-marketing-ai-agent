@@ -24,3 +24,9 @@ SELECT a.attempt, a.video_id, a.stage, a.evidence, CASE WHEN a.stage = 'READY' T
 FROM video_analysis a
 WHERE a.stage IN ('READY','FAILED','INSUFFICIENT')
   AND NOT EXISTS (SELECT 1 FROM analysis_revision r WHERE r.attempt = a.attempt);
+
+ALTER TABLE video_analysis ADD COLUMN IF NOT EXISTS started_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE video_analysis ADD COLUMN IF NOT EXISTS failure_reason VARCHAR(1000);
+ALTER TABLE video_analysis ADD COLUMN IF NOT EXISTS analysis_type VARCHAR(32);
+ALTER TABLE analysis_revision ADD COLUMN IF NOT EXISTS failure_reason VARCHAR(1000);
+ALTER TABLE analysis_revision ADD COLUMN IF NOT EXISTS screenshot TEXT;

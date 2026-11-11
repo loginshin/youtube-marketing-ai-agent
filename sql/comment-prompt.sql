@@ -42,3 +42,8 @@ CREATE TABLE IF NOT EXISTS video_analysis_settings (
 INSERT INTO video_analysis_settings (id, instructions, model)
 SELECT 1, '영상의 화면과 음성에서 연애 고민을 찾아 한 줄로 요약하세요. 고민이 드러나는 실제 발언이나 장면과 해당 시점을 근거로 제시하세요.', 'gemini-2.5-flash'
 WHERE NOT EXISTS (SELECT 1 FROM video_analysis_settings WHERE id = 1);
+
+-- Upgrade the unavailable Flash model while preserving custom instructions.
+UPDATE video_analysis_settings
+SET model = 'gemini-3.8-flash', version = version + 1
+WHERE id = 1 AND model = 'gemini-2.5-flash';

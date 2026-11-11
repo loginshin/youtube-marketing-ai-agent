@@ -14,10 +14,14 @@ class AnalysisRevision {
     String evidence;
     String draft;
     Instant recordedAt;
+    String failureReason;
+    @jakarta.persistence.Column(columnDefinition = "text")
+    String screenshot;
 
     protected AnalysisRevision() {}
 
     AnalysisRevision(VideoAnalysis job) {
+        failureReason = job.failureReason;
         attempt = job.attempt;
         videoId = job.videoId;
         outcome = job.stage.name();

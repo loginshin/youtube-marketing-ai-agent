@@ -33,4 +33,30 @@ class VideoAnalysisController {
     }
 
     record Retry(VideoAnalysisWork.Input input, String attempt, String evidence) {}
+
+    @PutMapping("/history/{attempt}/screenshot")
+    @org.springframework.transaction.annotation.Transactional
+    void screenshot(@PathVariable String id, @PathVariable String attempt, @RequestBody Capture capture) {
+        var revision = revisions.findById(attempt).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!revision.videoId.equals(id) || !"FAILED".equals(revision.outcome))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        String image = capture.image();
+        if (image == null || image.length() > 2_000_000 || !image.startsWith("data:image/png;base64,"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        byte[] bytes;
+        try { bytes = java.util.Base64.getDecoder().decode(image.substring(22)); }
+        catch (IllegalArgumentException error) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST); }
+        if (bytes.length < 8 || bytes[0] != (byte) 137 || bytes[1] != 80 || bytes[2] != 78 || bytes[3] != 71)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        if (revision.screenshot == null) revision.screenshot = image;
+    }
+
+    @GetMapping("/history/{attempt}/screenshot")
+    Capture screenshot(@PathVariable String id, @PathVariable String attempt) {
+        var revision = revisions.findById(attempt).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!revision.videoId.equals(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new Capture(revision.screenshot);
+    }
+
+    record Capture(String image) {}
 }

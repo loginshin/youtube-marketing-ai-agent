@@ -39,6 +39,7 @@ class VideoAnalysisWork implements ApplicationRunner {
     @Override public void run(ApplicationArguments args) {
         // This local server owns the workers. An interrupted paid call requires explicit retry.
         for (var job : jobs.findAllByStageIn(List.of(SUMMARY, DRAFT))) {
+            job.failureReason = "서버가 재시작되어 분석이 중단되었습니다. 다시 시도해주세요.";
             job.stage = FAILED;
             completion.finish(job);
         }
@@ -67,6 +68,9 @@ class VideoAnalysisWork implements ApplicationRunner {
     }
 
     private VideoAnalysis.Snapshot submit(VideoAnalysis job, Input input) {
+        job.startedAt = java.time.Instant.now();
+        job.failureReason = null;
+        job.analysisType = Boolean.TRUE.equals(input.analyzeVideo()) ? "VIDEO" : "CONTENT";
         var saved = jobs.saveAndFlush(job);
         var snapshot = saved.snapshot();
         workers.execute(() -> execute(saved, input));
@@ -94,9 +98,29 @@ class VideoAnalysisWork implements ApplicationRunner {
             job.draft = drafts.generate(input.title(), evidence, config.instructions(), config.modelTier());
             job.stage = READY;
         } catch (RuntimeException exception) {
+            org.slf4j.LoggerFactory.getLogger(VideoAnalysisWork.class)
+                    .warn("Analysis failed for video {} at stage {} ({})", job.videoId, job.stage, exception.getClass().getSimpleName());
+            job.failureReason = failureReason(exception, job.stage.name());
             job.stage = FAILED;
         }
         completion.finish(job);
+    }
+
+    private String failureReason(RuntimeException exception, String stage) {
+        String prefix = stage.equals("SUMMARY") ? "분석 실패 · " : "댓글 초안 생성 실패 · ";
+        if (exception instanceof org.springframework.web.client.RestClientResponseException response) {
+            return prefix + switch (response.getStatusCode().value()) {
+                case 400 -> "요청 형식 또는 영상 접근 조건을 확인해주세요. (HTTP 400)";
+                case 401, 403 -> "API 키와 API 사용 권한을 확인해주세요. (HTTP " + response.getStatusCode().value() + ")";
+                case 404 -> "요청한 모델 또는 영상을 사용할 수 없습니다. AI 설정을 확인해주세요. (HTTP 404)";
+                case 429 -> "API 사용 한도 또는 크레딧을 확인해주세요. (HTTP 429)";
+                default -> "AI 서버 오류입니다. 잠시 후 다시 시도해주세요. (HTTP " + response.getStatusCode().value() + ")";
+            };
+        }
+        if (exception instanceof org.springframework.web.client.ResourceAccessException) {
+            return prefix + "AI 응답 대기 시간이 초과되었거나 네트워크 연결에 실패했습니다.";
+        }
+        return prefix + "AI 응답 처리에 실패했습니다. 응답 형식과 초안 길이를 확인해주세요.";
     }
 
     record Input(String title, String description, List<String> comments, Boolean analyzeVideo) {

@@ -16,6 +16,9 @@ class VideoAnalysis {
     String evidence = "";
     String draft = "";
     String attempt;
+    java.time.Instant startedAt;
+    String failureReason;
+    String analysisType;
 
     protected VideoAnalysis() {}
     VideoAnalysis(String id) {
@@ -25,6 +28,6 @@ class VideoAnalysis {
     }
 
     boolean running() { return stage == Stage.SUMMARY || stage == Stage.DRAFT; }
-    Snapshot snapshot() { return new Snapshot(stage, concern, evidence, draft, attempt); }
-    record Snapshot(Stage stage, String concern, String evidence, String draft, String attempt) {}
+    Snapshot snapshot() { return new Snapshot(stage, concern, evidence, draft, attempt, startedAt, failureReason, analysisType); }
+    record Snapshot(Stage stage, String concern, String evidence, String draft, String attempt, java.time.Instant startedAt, String failureReason, String analysisType) {}
 }
