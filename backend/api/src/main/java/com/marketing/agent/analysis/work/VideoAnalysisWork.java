@@ -24,6 +24,7 @@ class VideoAnalysisWork implements ApplicationRunner {
     private final com.marketing.agent.analysis.application.VideoAnalysisSettingsService videoSettings;
     private final DraftService drafts;
     private final CommentPromptService settings;
+    private final java.util.Map<String, java.util.concurrent.Future<?>> tasks = new java.util.HashMap<>();
     private final ExecutorService workers = Executors.newFixedThreadPool(3);
 
     VideoAnalysisWork(VideoAnalysisRepository jobs, VideoSummaryService summaries, DraftService drafts, CommentPromptService settings, AnalysisCompletion completion, com.marketing.agent.ai.GeminiVideoService videoAnalyzer, com.marketing.agent.analysis.application.VideoAnalysisSettingsService videoSettings) {
@@ -63,6 +64,30 @@ class VideoAnalysisWork implements ApplicationRunner {
         return submit(job, input);
     }
 
+    synchronized VideoAnalysis.Snapshot cancel(String id, String attempt) {
+        var job = get(id);
+        if (!job.running() || !job.attempt.equals(attempt)) return job.snapshot();
+        job.stage = CANCELLED;
+        completion.finish(job);
+        var task = tasks.remove(attempt);
+        if (task != null) task.cancel(true);
+        return job.snapshot();
+    }
+
+    private boolean active(VideoAnalysis job) {
+        var current = get(job.videoId);
+        return current.running() && current.attempt.equals(job.attempt);
+    }
+
+    private synchronized VideoAnalysis advance(VideoAnalysis job) {
+        if (!active(job)) return null;
+        return jobs.saveAndFlush(job);
+    }
+
+    private synchronized void finish(VideoAnalysis job) {
+        if (active(job)) completion.finish(job);
+    }
+
     VideoAnalysis get(String id) {
         return jobs.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
@@ -73,12 +98,16 @@ class VideoAnalysisWork implements ApplicationRunner {
         job.analysisType = Boolean.TRUE.equals(input.analyzeVideo()) ? "VIDEO" : "CONTENT";
         var saved = jobs.saveAndFlush(job);
         var snapshot = saved.snapshot();
-        workers.execute(() -> execute(saved, input));
+        tasks.put(saved.attempt, workers.submit(() -> {
+            try { execute(saved, input); }
+            finally { synchronized (this) { tasks.remove(saved.attempt); } }
+        }));
         return snapshot;
     }
 
     private void execute(VideoAnalysis job, Input input) {
         try {
+            synchronized (this) { if (!active(job)) return; }
             var config = settings.current();
             if (job.stage == SUMMARY) {
                 var videoConfig = videoSettings.current();
@@ -86,24 +115,27 @@ class VideoAnalysisWork implements ApplicationRunner {
                         : summaries.summarize(input.title(), input.description(), input.comments(), config.modelTier());
                 if (!"ready".equals(summary.status())) {
                     job.stage = INSUFFICIENT;
-                    completion.finish(job);
+                    finish(job);
                     return;
                 }
                 job.concern = summary.summary();
                 job.evidence = summary.source() + " · " + summary.quote();
                 job.stage = DRAFT;
-                job = jobs.saveAndFlush(job);
+                job = advance(job);
+                if (job == null) return;
             }
+            synchronized (this) { if (!active(job)) return; }
             String evidence = "고민 요약: " + job.concern + "\n출처와 인용: " + job.evidence;
             job.draft = drafts.generate(input.title(), evidence, config.instructions(), config.modelTier());
             job.stage = READY;
         } catch (RuntimeException exception) {
+            synchronized (this) { if (!active(job)) return; }
             org.slf4j.LoggerFactory.getLogger(VideoAnalysisWork.class)
                     .warn("Analysis failed for video {} at stage {} ({})", job.videoId, job.stage, exception.getClass().getSimpleName());
             job.failureReason = failureReason(exception, job.stage.name());
             job.stage = FAILED;
         }
-        completion.finish(job);
+        finish(job);
     }
 
     private String failureReason(RuntimeException exception, String stage) {
@@ -119,6 +151,9 @@ class VideoAnalysisWork implements ApplicationRunner {
         }
         if (exception instanceof org.springframework.web.client.ResourceAccessException) {
             return prefix + "AI 응답 대기 시간이 초과되었거나 네트워크 연결에 실패했습니다.";
+        }
+        if (exception instanceof com.marketing.agent.ai.GeminiVideoService.AnalysisFailure) {
+            return prefix + exception.getMessage();
         }
         return prefix + "AI 응답 처리에 실패했습니다. 응답 형식과 초안 길이를 확인해주세요.";
     }

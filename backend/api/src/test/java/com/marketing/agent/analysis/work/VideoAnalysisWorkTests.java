@@ -66,6 +66,45 @@ class VideoAnalysisWorkTests {
         assertNotNull(history.getFirst().recordedAt());
     }
 
+    @Test
+    void cancelledSummaryCannotGenerateDraftOrOverwriteCancellation() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var returned = new CountDownLatch(1);
+        when(ai.generateJson(any(), anyString(), anyString())).thenAnswer(call -> {
+            entered.countDown();
+            // Simulate a provider that still returns after local cancellation.
+            try { assertTrue(release.await(10, TimeUnit.SECONDS)); }
+            catch (InterruptedException ignored) { /* Return a late response deliberately. */ }
+            returned.countDown();
+            return "{\"summary\":\"다음 만남이 궁금하다\",\"source\":1,\"quote\":\"다음 약속을 잡는지\"}";
+        });
+        String url = "http://localhost:" + port + "/api/analysis/videos/canceltest1";
+        // Video ids must contain exactly eleven characters.
+
+        var start = http.send(HttpRequest.newBuilder(URI.create(url))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(INPUT)).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, start.statusCode());
+        var job = json.readValue(start.body(), VideoAnalysis.Snapshot.class);
+        try {
+            assertTrue(entered.await(5, TimeUnit.SECONDS));
+            var cancel = HttpRequest.newBuilder(URI.create(url + "/cancel"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(new VideoAnalysisController.Cancel(job.attempt())))).build();
+            var response = http.send(cancel, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            assertEquals(VideoAnalysis.Stage.CANCELLED, json.readValue(response.body(), VideoAnalysis.Snapshot.class).stage());
+            assertEquals(200, http.send(cancel, HttpResponse.BodyHandlers.ofString()).statusCode());
+        } finally { release.countDown(); }
+        assertTrue(returned.await(5, TimeUnit.SECONDS));
+        verify(ai, after(300).never()).generate(any(), anyString(), anyString());
+        var current = http.send(HttpRequest.newBuilder(URI.create(url)).build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(VideoAnalysis.Stage.CANCELLED, json.readValue(current.body(), VideoAnalysis.Snapshot.class).stage());
+        assertEquals(1, revisions.history("canceltest1").size());
+        assertEquals("CANCELLED", revisions.history("canceltest1").getFirst().outcome());
+    }
+
     private VideoAnalysis.Snapshot request(String body) throws Exception {
         var builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/analysis/videos/abcdefghijk"));
         if (body != null) builder.header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body));

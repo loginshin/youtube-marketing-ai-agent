@@ -57,6 +57,7 @@ export function AnalysisProgress({ videoId, title, job }: Props) {
           {job.stage === 'SUMMARY' ? '1/2 · AI 분석 응답 대기' : '2/2 · 댓글 초안 생성'}
           {elapsed !== null && ` · ${elapsed}초 경과`}
         </p><small>AI 응답 대기 중에는 처리 비율을 확인할 수 없습니다.</small></>}
+        {job.stage === 'CANCELLED' && <p role="status">사용자가 작업을 취소했습니다.</p>}
         {job.stage === 'READY' && <p role="status">분석과 초안 생성 완료</p>}
         {job.stage === 'INSUFFICIENT' && <p role="status">분석 완료 · 고민을 확인할 근거가 부족합니다.</p>}
         {job.stage === 'FAILED' && <p role="alert">{job.failureReason || '이전 작업이 실패했습니다. 저장된 상세 사유가 없습니다.'}</p>}

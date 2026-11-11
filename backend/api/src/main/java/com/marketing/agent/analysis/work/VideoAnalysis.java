@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "video_analysis")
 class VideoAnalysis {
-    enum Stage { SUMMARY, DRAFT, READY, INSUFFICIENT, FAILED }
+    enum Stage { SUMMARY, DRAFT, READY, INSUFFICIENT, FAILED, CANCELLED }
 
     @Id String videoId;
     @Version Long version;

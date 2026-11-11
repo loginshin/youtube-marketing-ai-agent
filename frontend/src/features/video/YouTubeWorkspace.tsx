@@ -150,6 +150,10 @@ function SelectedVideo({ detail }: { detail: Detail }) {
           )}
         </details>
         <p role="status">{analysis.message}</p>
+        {(analysis.job?.stage === 'SUMMARY' || analysis.job?.stage === 'DRAFT') &&
+          <button disabled={analysis.cancelling} onClick={() => void analysis.cancel()}>
+            {analysis.cancelling ? '취소 요청 중…' : '분석·초안 생성 취소'}
+          </button>}
         <AnalysisProgress videoId={video.id} title={video.title} job={analysis.job} />
         {!analysis.busy && <AnalysisHistory key={analysis.job?.attempt} videoId={video.id} />}
         {analysis.reconnect && <button onClick={analysis.reconnect}>작업 다시 연결</button>}

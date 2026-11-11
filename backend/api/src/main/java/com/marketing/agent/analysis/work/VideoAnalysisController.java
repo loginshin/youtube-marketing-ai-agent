@@ -32,6 +32,15 @@ class VideoAnalysisController {
         return work.retry(id, request.input(), request.attempt(), request.evidence().strip());
     }
 
+    @PostMapping("/cancel")
+    VideoAnalysis.Snapshot cancel(@PathVariable String id, @RequestBody Cancel request) {
+        if (request.attempt() == null || request.attempt().isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        return work.cancel(id, request.attempt());
+    }
+
+    record Cancel(String attempt) {}
+
     record Retry(VideoAnalysisWork.Input input, String attempt, String evidence) {}
 
     @PutMapping("/history/{attempt}/screenshot")

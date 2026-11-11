@@ -4,12 +4,12 @@ type Entry = {
   failureReason?: string
   attempt: string
   recordedAt: string | null
-  outcome: 'READY' | 'INSUFFICIENT' | 'FAILED'
+  outcome: 'READY' | 'INSUFFICIENT' | 'FAILED' | 'CANCELLED'
   evidence: string
   draft: string
 }
 
-const labels = { READY: '초안 생성', INSUFFICIENT: '근거 부족', FAILED: '생성 실패' }
+const labels = { CANCELLED: '사용자 취소', READY: '초안 생성', INSUFFICIENT: '근거 부족', FAILED: '생성 실패' }
 const time = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'medium',
 })

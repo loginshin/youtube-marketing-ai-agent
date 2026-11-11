@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { VideoContext } from './analysisApi'
 
-type Stage = 'SUMMARY' | 'DRAFT' | 'READY' | 'FAILED' | 'INSUFFICIENT'
+type Stage = 'SUMMARY' | 'DRAFT' | 'READY' | 'FAILED' | 'INSUFFICIENT' | 'CANCELLED'
 type Snapshot = { startedAt?: string; failureReason?: string; analysisType?: string; stage: Stage; attempt: string; concern: string; evidence: string; draft: string }
 type Edits = { attempt: string; evidence?: string; draft?: string }
 const messages: Record<Stage, string> = {
+  CANCELLED: '작업을 취소했습니다. 분석 버튼으로 다시 시작할 수 있습니다.',
   SUMMARY: '서버에서 AI 분석을 진행하고 있습니다.',
   DRAFT: '서버에서 댓글 초안을 생성하고 있습니다.',
   READY: '저장된 초안입니다. 근거와 본문을 검토해주세요.',
@@ -20,6 +21,7 @@ function savedEdits(id: string): Edits | null {
 export function useVideoAnalysis(video: VideoContext | null) {
   const [result, setResult] = useState<{ id: string; job: Snapshot; edits: Edits | null } | null>(null)
   const [action, setAction] = useState<{ id: string; attempt?: string; evidence?: string; analyzeVideo?: boolean } | null>(null)
+  const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   useEffect(() => {
@@ -72,6 +74,22 @@ export function useVideoAnalysis(video: VideoContext | null) {
   const busy = submitting || !job || job.stage === 'SUMMARY' || job.stage === 'DRAFT'
   const evidence = current?.edits?.evidence ?? job?.evidence ?? ''
   return {
+    cancelling,
+    cancel: async () => {
+      if (!video || !job || cancelling) return
+      setCancelling(true)
+      try {
+        const response = await fetch('/api/analysis/videos/' + encodeURIComponent(video.id) + '/cancel', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ attempt: job.attempt }), signal: AbortSignal.timeout(15000),
+        })
+        if (!response.ok) throw new Error('취소 요청에 실패했습니다. 다시 시도해주세요.')
+        // Restart polling and abort older status requests.
+        setAction({ id: video.id })
+      } catch (error) {
+        setError(error instanceof Error ? error.message : '취소 요청에 실패했습니다.')
+      } finally { setCancelling(false) }
+    },
     job, busy, concern: job?.concern ?? '', evidence, draft: current?.edits?.draft ?? job?.draft ?? '',
     message: error || (job ? messages[job.stage] : '저장된 작업을 확인하고 있습니다.'),
     reconnect: error && video ? () => { setError(''); setAction({ id: video.id }) } : null,
