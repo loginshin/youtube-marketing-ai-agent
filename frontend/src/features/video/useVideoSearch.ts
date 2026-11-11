@@ -24,7 +24,7 @@ function restore(): Workspace | null {
 
 export function useVideoSearch() {
   const [restored] = useState(restore)
-  const [query, setQuery] = useState(restored?.query ?? '연애')
+  const [query, setQuery] = useState(restored?.query ?? '')
   const [filters, setFilters] = useState(restored?.filters ?? defaults)
   const [applied, setApplied] = useState(restored?.filters ?? defaults)
   const [items, setItems] = useState<Video[]>(restored?.items ?? [])

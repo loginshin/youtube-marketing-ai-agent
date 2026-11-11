@@ -32,9 +32,10 @@ export function YouTubeWorkspace() {
           void load()
         }}
       >
-        <label htmlFor="video-query">YouTube 검색어</label>
         <input
           id="video-query"
+          aria-label="YouTube 검색어"
+          placeholder="ex) 연애 고민"
           value={query}
           maxLength={100}
           disabled={busy}
