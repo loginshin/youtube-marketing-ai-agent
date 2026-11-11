@@ -12,11 +12,14 @@ public class VideoQueryService {
         this.youtube = youtube;
     }
 
-    public SearchPage search(String query, String pageToken) {
+    public SearchPage search(String query, String pageToken, String order, java.time.Instant publishedAfter) {
         if (query.isBlank() || query.length() > 100) {
             throw new IllegalArgumentException("검색어는 1~100자로 입력하세요.");
         }
-        var page = youtube.search(query.strip(), pageToken);
+        if (!List.of("date", "relevance", "viewCount").contains(order)) {
+            throw new IllegalArgumentException("지원하지 않는 정렬입니다.");
+        }
+        var page = youtube.search(query.strip(), pageToken, order, publishedAfter);
         var durations = youtube.durations(page.items().stream().map(item -> item.id().videoId()).toList());
         var items = page.items().stream().map(item -> new VideoSummary(
                 item.id().videoId(), item.snippet().title(), item.snippet().channelTitle(),

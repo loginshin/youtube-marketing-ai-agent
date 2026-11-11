@@ -30,11 +30,12 @@ public class YouTubeClient {
                 }).build();
     }
 
-    public SearchResponse search(String query, String pageToken) {
+    public SearchResponse search(String query, String pageToken, String order, java.time.Instant publishedAfter) {
         requireKey();
         SearchResponse response = client.get().uri(builder -> builder.path("/search")
                 .queryParam("part", "snippet").queryParam("type", "video")
-                .queryParam("order", "date").queryParam("maxResults", 10)
+                .queryParamIfPresent("publishedAfter", java.util.Optional.ofNullable(publishedAfter))
+                .queryParam("order", order).queryParam("maxResults", 10)
                 .queryParamIfPresent("pageToken", java.util.Optional.ofNullable(pageToken))
                 .queryParam("q", query).build()).header("X-Goog-Api-Key", key)
                 .retrieve().body(SearchResponse.class);

@@ -22,8 +22,10 @@ public class VideoController {
 
     @GetMapping
     public ResponseEntity<List<VideoSummary>> search(@RequestParam(defaultValue = "연애") String query,
-                                                      @RequestParam(required = false) String pageToken) {
-        var page = videos.search(query, pageToken);
+                                                      @RequestParam(required = false) String pageToken,
+                                                      @RequestParam(defaultValue = "date") String order,
+                                                      @RequestParam(required = false) java.time.Instant publishedAfter) {
+        var page = videos.search(query, pageToken, order, publishedAfter);
         var response = ResponseEntity.ok();
         if (page.nextPageToken() != null) response.header("X-Next-Page-Token", page.nextPageToken());
         return response.body(page.items());
