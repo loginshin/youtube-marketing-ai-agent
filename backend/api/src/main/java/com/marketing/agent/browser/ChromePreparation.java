@@ -36,7 +36,7 @@ class ChromePreparation {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 progress = new Progress(videoId, "Chrome 프로필 여는 중");
-                Result ready = inspect(videoId);
+                Result ready = inspectForPublication(videoId);
                 if (!"READY".equals(ready.status())) throw new IllegalStateException(ready.message());
                 progress = new Progress(videoId, "댓글 입력 중");
                 String comment = submitApproved(page, videoId, body, () -> {
@@ -50,14 +50,14 @@ class ChromePreparation {
                 remember.accept(comment);
                 page.navigate("https://www.youtube.com/watch?v=" + videoId + "&hl=ko&lc=" + comment,
                         new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(20000));
-                page.locator("ytd-comments#comments").first().scrollIntoViewIfNeeded();
-                page.locator("ytd-comments #content-text")
+                openComments(page);
+                page.locator("#content-text:visible")
                         .and(page.getByText(body, new Page.GetByTextOptions().setExact(true)))
                         .first().waitFor();
                 return comment;
             } catch (RuntimeException failure) {
                 String reason = failure instanceof IllegalStateException ? failure.getMessage()
-                        : "Chrome에서 댓글 입력 또는 게시 결과 확인에 실패했습니다.";
+                        : progress.message() + " 단계에서 Chrome 작업에 실패했습니다 (" + failure.getClass().getSimpleName() + ").";
                 recordFailure.accept(reason, captureFailure());
                 throw failure;
             } finally {
@@ -84,6 +84,7 @@ class ChromePreparation {
     static String submitApproved(Page page, String videoId, String body, Runnable reserve) {
         var composer = page.locator("ytd-comment-simplebox-renderer:visible").first();
         var editor = composer.locator("[contenteditable='true']:visible").first();
+        editor.click();
         editor.fill("");
         for (var character : body.codePoints().toArray()) {
             page.keyboard().insertText(Character.toString(character));
@@ -121,6 +122,33 @@ class ChromePreparation {
         }
     }
 
+    private Result inspectForPublication(String videoId) {
+        try {
+            return inspect(videoId);
+        } catch (PlaywrightException first) {
+            if (!targetClosed(first)) throw first;
+            // The user may have closed the persistent window since the previous job.
+            // Only reconnect before typing or reserving a submission.
+            if (playwright != null) {
+                try { playwright.close(); } catch (PlaywrightException ignored) { }
+            }
+            playwright = null;
+            context = null;
+            page = null;
+            try {
+                return inspect(videoId);
+            } catch (PlaywrightException retry) {
+                if (!targetClosed(retry)) throw retry;
+                throw new IllegalStateException("전용 Chrome 창과의 연결이 종료됐습니다. 유튜브 1 전용 프로필을 직접 열어 둔 창이 있다면 닫고 댓글 달기를 다시 눌러주세요.", retry);
+            }
+        }
+    }
+
+    private static boolean targetClosed(PlaywrightException error) {
+        return error.getClass().getSimpleName().equals("TargetClosedError")
+                || String.valueOf(error.getMessage()).contains("Target page, context or browser has been closed");
+    }
+
     private Result inspect(String videoId) {
         if (playwright == null) playwright = Playwright.create(new Playwright.CreateOptions()
                 .setEnv(Map.of("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1")));
@@ -141,6 +169,16 @@ class ChromePreparation {
         return inspectControls(page);
     }
 
+    private static void openComments(Page page) {
+        if (page.url().contains("/shorts/")) {
+            if (!page.locator("ytd-engagement-panel-section-list-renderer:visible #comments:visible").first().isVisible()) {
+                page.locator("ytd-reel-video-renderer[is-active] button[aria-label*='댓글']").first().click();
+            }
+        } else {
+            page.locator("ytd-comments#comments").first().scrollIntoViewIfNeeded();
+        }
+    }
+
     static Result inspectControls(Page page) {
         try {
             page.waitForSelector("ytd-masthead #avatar-btn:visible, ytd-masthead a[href*='accounts.google.com']:visible, ytd-masthead a[href*='/signin']:visible");
@@ -150,12 +188,7 @@ class ChromePreparation {
         if (!page.locator("ytd-masthead #avatar-btn:visible").first().isVisible())
             return new Result("LOGIN_REQUIRED", "유튜브 1 전용 Chrome에서 로그인한 뒤 다시 확인하세요.");
         try {
-            if (page.url().contains("/shorts/")) {
-                var comments = page.locator("ytd-reel-video-renderer[is-active] button[aria-label*='댓글']").first();
-                comments.click();
-            } else {
-                page.locator("ytd-comments#comments").first().scrollIntoViewIfNeeded();
-            }
+            openComments(page);
             var composer = page.locator("ytd-comment-simplebox-renderer:visible").first();
             var editor = composer.locator("[contenteditable='true']:visible").first();
             if (!editor.isVisible()) composer.locator("#placeholder-area, #simplebox-placeholder").first().click();

@@ -88,27 +88,6 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
     setRevision((value) => value + 1)
   }
 
-  async function prepareChrome() {
-    if (checking) return
-    setChecking(true)
-    setMessage('전용 Chrome에서 로그인과 댓글 입력창을 확인하고 있습니다.')
-    try {
-      const response = await fetch(endpoint + '/prepare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-        signal: AbortSignal.timeout(90000),
-      })
-      if (!response.ok) throw new Error()
-      const result = await response.json()
-      setMessage(result.message)
-    } catch {
-      setMessage('입력창 확인 결과를 받지 못했습니다. Chrome과 서버 상태를 확인해주세요.')
-    } finally {
-      setChecking(false)
-    }
-  }
-
   async function approve() {
     if (phase !== 'ready' || job || saving.current) return
     saving.current = true
@@ -183,15 +162,12 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
           <blockquote>{job.body}</blockquote>
           {job.status === 'APPROVED' && job.profile === '유튜브 1' && (
             <div className="publication-actions">
-            <button disabled={checking} onClick={() => void prepareChrome()}>
-              {checking ? '입력창 확인 중…' : 'Chrome에서 댓글 입력창 확인'}
-            </button>
-            <button disabled={checking} onClick={() => void publication('publish')}>승인한 댓글 게시</button>
+            <button disabled={checking} onClick={() => void publication('publish')}>댓글 달기</button>
             </div>
           )}
-          {['APPROVED', 'CONFIRMATION_PENDING'].includes(job.status) && (
-            <details open={job.status === 'CONFIRMATION_PENDING'}>
-              <summary>이미 작성한 댓글 확인</summary>
+          {job.status === 'CONFIRMATION_PENDING' && (
+            <details open>
+              <summary>게시 결과 확인 대기</summary>
               <div className="editor-field">
                 <label>내 댓글 링크
                   <input type="url" placeholder="YouTube 댓글의 작성 시각을 눌러 복사한 링크" value={commentLink}

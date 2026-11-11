@@ -54,12 +54,11 @@ class PublicationController {
         if (job.getStatus() != JobStatus.APPROVED || !"유튜브 1".equals(job.getProfileName()))
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         try {
-            var title = title(id);
             var commentId = chrome.publish(id, job.getBody(), () -> store.reserve(id),
                     comment -> store.remember(id, comment),
                     (reason, image) -> store.recordFailure(id, reason, image)).join();
             if (commentId != null) {
-                verify(id, title, commentId);
+                verify(id, title(id), commentId);
                 return new ChromePreparation.Result("COMPLETED", "게시 완료 · 댓글 보기", "https://www.youtube.com/watch?v=" + id + "&lc=" + commentId);
             }
         } catch (CompletionException ex) {
