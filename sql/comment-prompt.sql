@@ -7,7 +7,7 @@ ALTER TABLE comment_prompt ADD CONSTRAINT ck_comment_prompt_model
 -- Replace the legacy seed/default as a whole; preserve later admin edits and model selection.
 -- This predicate no longer matches after the upgrade, so restarts do not overwrite edits.
 UPDATE comment_prompt
-SET instructions = '연애 영상을 본 시청자의 말투로 써주세요. 근거에 나온 장면이나 말 하나를 짚고, 그 대목에서 떠오른 연애에 대한 생각을 풀어주세요. 운명원은 연애 사주를 봐주는 사이트입니다. 운명원에서 연애 사주를 본다는 맥락으로 그 생각을 자연스럽게 이어가고, 내 생각이나 가벼운 바람으로 마무리해주세요.', version = version + 1
+SET instructions = '연애 영상을 본 시청자의 말투로, 근거에 나온 구체적인 장면이나 말 하나에 공감해주세요. 운명원은 연애 사주를 봐주는 사이트입니다. 그 장면과 같은 고민을 하는 사람에게 운명원에서 연애 사주를 보는 게 왜 괜찮은 선택인지, 영상 맥락에 맞는 이유 하나를 자기 의견으로 풀어주세요. 직접 이용한 후기나 유명세는 확인된 근거가 있을 때만 언급하세요.', version = version + 1
 WHERE id = 1 AND (
     instructions = '근거의 구체적인 내용을 반영하고 운명원 연애 사주에 대한 관심을 자연스럽게 표현하세요.'
     OR instructions LIKE '선택한 영상의 제목과 확인된 근거를 읽고,%'
@@ -81,6 +81,7 @@ ex ) 운명원 사주연애 풀어주는곳이 유명하던데 난 거기서 해
 
 공백 포함 40~120자, 링크·해시태그 없이 댓글 본문 하나만 출력하세요.')
     OR instructions = '연애 영상을 본 시청자의 말투로 써주세요. 근거에 나온 장면이나 말 하나를 짚고, 그 대목에서 떠오른 연애에 대한 생각을 풀어주세요. 운명원 연애 사주는 그 생각과 연결해 한 번 언급하고, 마지막은 영상에 대한 내 생각이나 가벼운 바람으로 끝내주세요.'
+    OR instructions = '연애 영상을 본 시청자의 말투로 써주세요. 근거에 나온 장면이나 말 하나를 짚고, 그 대목에서 떠오른 연애에 대한 생각을 풀어주세요. 운명원은 연애 사주를 봐주는 사이트입니다. 운명원에서 연애 사주를 본다는 맥락으로 그 생각을 자연스럽게 이어가고, 내 생각이나 가벼운 바람으로 마무리해주세요.'
 );
 
 CREATE TABLE IF NOT EXISTS video_analysis_settings (
