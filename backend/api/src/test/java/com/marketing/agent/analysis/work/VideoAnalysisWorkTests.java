@@ -30,11 +30,11 @@ class VideoAnalysisWorkTests {
     void reopeningDuringGenerationReusesWorkAndCompletedResult() throws Exception {
         var finish = new CountDownLatch(1);
         String draft = "가".repeat(40);
-        when(ai.generate(any(), anyString(), anyString()))
+        when(ai.generateJson(any(), anyString(), anyString()))
                 .thenReturn("""
                         {"summary":"다음 만남이 궁금하다","source":1,"quote":"다음 약속을 잡는지"}
-                        """)
-                .thenAnswer(call -> { assertTrue(finish.await(10, TimeUnit.SECONDS)); return draft; });
+                        """);
+        when(ai.generate(any(), anyString(), anyString())).thenAnswer(call -> { assertTrue(finish.await(10, TimeUnit.SECONDS)); return draft; });
         var first = request(INPUT);
         try {
             assertEquals(first.attempt(), request(INPUT).attempt());
@@ -46,7 +46,8 @@ class VideoAnalysisWorkTests {
         }
         assertEquals(draft, result.draft());
         assertEquals(result, request(INPUT));
-        verify(ai, times(2)).generate(any(), anyString(), anyString());
+        verify(ai).generateJson(any(), anyString(), anyString());
+        verify(ai).generate(any(), anyString(), anyString());
         String revised = "나".repeat(40);
         when(ai.generate(any(), anyString(), anyString())).thenReturn(revised);
         var retry = new VideoAnalysisController.Retry(

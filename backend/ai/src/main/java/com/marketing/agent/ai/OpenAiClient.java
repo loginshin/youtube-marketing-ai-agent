@@ -29,6 +29,14 @@ public class OpenAiClient {
     }
 
     public String generate(ModelTier model, String instructions, String input) {
+        return generate(model, instructions, input, Map.of());
+    }
+
+    public String generateJson(ModelTier model, String instructions, String input) {
+        return generate(model, instructions, input, Map.of("format", Map.of("type", "json_object")));
+    }
+
+    private String generate(ModelTier model, String instructions, String input, Map<String, Object> textOptions) {
         if (apiKey.isBlank()) {
             throw new IllegalStateException("backend/.env에 OPENAI_API_KEY를 설정하세요.");
         }
@@ -36,7 +44,7 @@ public class OpenAiClient {
         try {
             response = client.post().uri("/responses")
                 .headers(headers -> headers.setBearerAuth(apiKey))
-                .body(Map.of("model", model.modelId(), "instructions", instructions,
+                .body(Map.of("model", model.modelId(), "instructions", instructions, "text", textOptions,
                         "input", input, "store", false, "max_output_tokens", 1000,
                         "reasoning", Map.of("effort", model.reasoningEffort())))
                     .retrieve().body(Response.class);

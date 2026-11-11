@@ -42,7 +42,8 @@ public class VideoSummaryService {
         }
         if (sources.isEmpty()) return Result.insufficient();
 
-        String response = client.generate(model, INSTRUCTIONS, json.writeValueAsString(new Input(title, sources)));
+        String response = client.generateJson(model, INSTRUCTIONS,
+                "참고 자료(JSON):\n" + json.writeValueAsString(new Input(title, sources)));
         Candidate candidate;
         try {
             candidate = json.readValue(response, Candidate.class);

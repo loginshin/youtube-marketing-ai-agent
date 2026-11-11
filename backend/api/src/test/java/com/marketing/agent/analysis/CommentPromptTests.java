@@ -54,11 +54,12 @@ class CommentPromptTests {
         assertEquals(409, conflict.getStatusCode().value());
 
         String body = "가".repeat(40);
-        when(ai.generate(eq(model), anyString(), anyString())).thenReturn(body, "{}");
+        when(ai.generate(eq(model), anyString(), anyString())).thenReturn(body);
+        when(ai.generateJson(eq(model), anyString(), anyString())).thenReturn("{}");
         var draft = analysis.generate(new AnalysisController.DraftRequest("영상 제목", "확인한 발언"));
         assertEquals(body, draft.draft());
         verify(ai).generate(eq(model), contains(instructions), contains("확인한 발언"));
         analysis.summarize(new AnalysisController.SummaryRequest("영상 제목", "영상 설명", List.of()));
-        verify(ai).generate(eq(model), contains("JSON"), contains("영상 설명"));
+        verify(ai).generateJson(eq(model), contains("JSON"), contains("영상 설명"));
     }
 }
