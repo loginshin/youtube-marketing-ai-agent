@@ -76,55 +76,61 @@ export function PromptSettings() {
 
   return (
     <section className="prompt-settings">
-      <label htmlFor="ai-model">OpenAI 모델</label>
-      <select
-        id="ai-model"
-        value={modelTier}
-        disabled={busy || !saved}
-        onChange={(event) => {
-          setModelTier(event.target.value)
-          if (!conflict) setMessage('')
-        }}
-      >
-        {saved?.models.map(({ tier, label, modelId }) => (
-          <option key={tier} value={tier}>{label} · {modelId}</option>
-        ))}
-      </select>
-      <label htmlFor="prompt-instructions">댓글 초안 작성 지침</label>
-      <p>
-        말투, 강조할 내용, 브랜드 표현을 입력하세요. 영상 근거와 40~120자 작성
-        기준은 별도로 적용됩니다.
-      </p>
-      <textarea
-        id="prompt-instructions"
-        rows={8}
-        maxLength={4000}
-        value={text}
-        disabled={busy || !saved}
-        onChange={(event) => {
-          setText(event.target.value)
-          if (!conflict) setMessage('')
-        }}
-      />
-      <small>{text.length} / 4000자</small>
-      <p role="status">{message}</p>
-      <button
-        onClick={() => void save()}
-        disabled={
-          busy ||
-          conflict ||
-          !saved ||
-          !text.trim() ||
-          (text.trim() === saved.instructions && modelTier === saved.modelTier)
-        }
-      >
-        설정 저장
-      </button>
-      {(!saved || conflict) && !busy && (
-        <button onClick={() => setReload((n) => n + 1)}>
-          최신 지침 불러오기
+      <div className="editor-field">
+        <label htmlFor="ai-model">OpenAI 모델</label>
+        <select
+          id="ai-model"
+          value={modelTier}
+          disabled={busy || !saved}
+          onChange={(event) => {
+            setModelTier(event.target.value)
+            if (!conflict) setMessage('')
+          }}
+        >
+          {saved?.models.map(({ tier, label, modelId }) => (
+            <option key={tier} value={tier}>{label} · {modelId}</option>
+          ))}
+        </select>
+      </div>
+      <div className="editor-field">
+        <label htmlFor="prompt-instructions">댓글 초안 작성 지침</label>
+        <p>
+          말투, 강조할 내용, 브랜드 표현을 입력하세요. 영상 근거와 40~120자 작성
+          기준은 별도로 적용됩니다.
+        </p>
+        <textarea
+          id="prompt-instructions"
+          rows={8}
+          maxLength={4000}
+          value={text}
+          disabled={busy || !saved}
+          onChange={(event) => {
+            setText(event.target.value)
+            if (!conflict) setMessage('')
+          }}
+        />
+        <small>{text.length} / 4000자</small>
+      </div>
+      <footer className="settings-actions">
+        <p role="status">{message}</p>
+        <button
+          onClick={() => void save()}
+          disabled={
+            busy ||
+            conflict ||
+            !saved ||
+            !text.trim() ||
+            (text.trim() === saved.instructions && modelTier === saved.modelTier)
+          }
+        >
+          설정 저장
         </button>
-      )}
+        {(!saved || conflict) && !busy && (
+          <button onClick={() => setReload((n) => n + 1)}>
+            최신 지침 불러오기
+          </button>
+        )}
+      </footer>
     </section>
   )
 }

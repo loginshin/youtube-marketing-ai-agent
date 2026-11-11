@@ -33,6 +33,7 @@ export function YouTubeWorkspace() {
   return (
     <>
       <form
+        className="video-search"
         onSubmit={(event) => {
           event.preventDefault()
           void load()
@@ -53,14 +54,18 @@ export function YouTubeWorkspace() {
       {items.length > 0 && <p role="status">{message}</p>}
       <div className={video ? 'dashboard' : 'results-only'}>
         <section>
-          <h2>영상 목록</h2>
-          <label htmlFor="video-format">영상 길이</label>
-          <select id="video-format" value={format} onChange={(event) => setFormat(event.target.value)}>
-            <option value="all">전체</option>
-            <option value="short">쇼츠 후보 · 3분 이하</option>
-            <option value="long">롱폼 · 3분 초과</option>
-          </select>
-          {format === 'short' && <p>3분 이하의 일반 영상도 포함됩니다.</p>}
+          <div className="list-heading">
+            <h2>영상 목록</h2>
+            {items.length > 0 && <small>{visibleItems.length}개</small>}
+          </div>
+          <div className="length-filter" role="group" aria-label="영상 길이">
+            {Object.entries({ all: '전체', short: '쇼츠 후보', long: '롱폼' }).map(([value, label]) => (
+              <button key={value} type="button" aria-pressed={format === value}
+                onClick={() => setFormat(value)}>{label}</button>
+            ))}
+          </div>
+          {format === 'short' && <p>3분 이하 · 짧은 일반 영상도 포함됩니다.</p>}
+          {format === 'long' && <p>3분 초과 영상을 표시합니다.</p>}
           {items.length > 0 && visibleItems.length === 0 && (
             <p role="status">현재 목록에 해당 길이의 영상이 없습니다.</p>
           )}

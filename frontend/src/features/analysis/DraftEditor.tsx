@@ -65,43 +65,49 @@ export function DraftEditor({
   }
 
   return (
-    <>
-      <h3>{video.title}</h3>
-      <p>{video.concern}</p>
-      <label htmlFor={evidenceId}>확인한 영상 근거</label>
-      <textarea
-        id={evidenceId}
-        value={evidence}
-        maxLength={10000}
-        disabled={pending}
-        onChange={(event) => onEvidenceChange(event.target.value)}
-        rows={3}
-      />
-      <p>
-        {actualVideo
-          ? '직접 확인한 영상 근거를 입력하면 AI 초안을 생성할 수 있습니다. 자막은 자동 수집하지 않습니다.'
-          : '예시 영상의 근거를 사용해 실제 AI 초안을 생성합니다.'}
-      </p>
-      <button
-        disabled={pending || !evidence.trim()}
-        onClick={() => void generate()}
-      >
-        {pending ? '생성 중…' : 'AI 초안 생성·재생성'}
-      </button>
-      <p role="status">{message}</p>
-      <label htmlFor={draftId}>댓글 초안</label>
-      <textarea
-        id={draftId}
-        value={draft}
-        disabled={pending}
-        onChange={(e) => onEdit(e.target.value)}
-        rows={5}
-        aria-invalid={!valid}
-        aria-describedby={lengthId}
-      />
-      <small id={lengthId} aria-live="polite">
-        {length}자 · {valid ? '글자 수 충족' : '40~120자로 작성하세요'}
-      </small>
-    </>
+    <div className="draft-editor">
+      <header>
+        <h3>{video.title}</h3>
+        <p>{video.concern}</p>
+      </header>
+      <div className="editor-field">
+        <label htmlFor={evidenceId}>확인한 영상 근거</label>
+        <textarea
+          id={evidenceId}
+          value={evidence}
+          maxLength={10000}
+          disabled={pending}
+          onChange={(event) => onEvidenceChange(event.target.value)}
+          rows={3}
+        />
+        <p>
+          {actualVideo
+            ? '직접 확인한 영상 근거를 입력하면 AI 초안을 생성할 수 있습니다. 자막은 자동 수집하지 않습니다.'
+            : '예시 영상의 근거를 사용해 실제 AI 초안을 생성합니다.'}
+        </p>
+        <button
+          disabled={pending || !evidence.trim()}
+          onClick={() => void generate()}
+        >
+          {pending ? '생성 중…' : 'AI 초안 생성·재생성'}
+        </button>
+        <p role="status">{message}</p>
+      </div>
+      <div className="editor-field">
+        <label htmlFor={draftId}>댓글 초안</label>
+        <textarea
+          id={draftId}
+          value={draft}
+          disabled={pending}
+          onChange={(e) => onEdit(e.target.value)}
+          rows={5}
+          aria-invalid={!valid}
+          aria-describedby={lengthId}
+        />
+        <small id={lengthId} aria-live="polite">
+          {length}자 · {valid ? '글자 수 충족' : '40~120자로 작성하세요'}
+        </small>
+      </div>
+    </div>
   )
 }
