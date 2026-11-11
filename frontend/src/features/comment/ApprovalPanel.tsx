@@ -5,7 +5,7 @@ type Job = {
   body: string
   status: string
   createdAt: string
-  events: { status: string; occurredAt: string }[]
+  events: { status: string; occurredAt: string; failureReason?: string; screenshotPath?: string }[]
 }
 
 const labels: Record<string, string> = {
@@ -28,6 +28,9 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
   const [message, setMessage] = useState('')
   const saving = useRef(false)
   const [checking, setChecking] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [progress, setProgress] = useState('')
+  const [postedUrl, setPostedUrl] = useState('')
   const [commentLink, setCommentLink] = useState('')
   const profile = '유튜브 1'
   const body = draft.trim()
@@ -58,6 +61,27 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
     void read()
     return () => controller.abort()
   }, [endpoint, revision])
+
+  useEffect(() => {
+    if (!publishing) return
+    const controller = new AbortController()
+    let timer: ReturnType<typeof setTimeout>
+    async function poll() {
+      try {
+        const response = await fetch(endpoint + '/progress', { signal: controller.signal, cache: 'no-store' })
+        if (response.ok && response.status !== 204) {
+          const result = await response.json()
+          if (!controller.signal.aborted) setProgress(result.message)
+        }
+      } catch {
+        // The publication response supplies the final status.
+      } finally {
+        if (!controller.signal.aborted) timer = setTimeout(poll, 500)
+      }
+    }
+    void poll()
+    return () => { controller.abort(); clearTimeout(timer) }
+  }, [endpoint, publishing])
 
   function refresh() {
     setPhase('loading')
@@ -113,6 +137,8 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
     if (checking || saving.current) return
     saving.current = true
     setChecking(true)
+    setProgress('')
+    setPublishing(action === 'publish')
     setMessage(action === 'publish' ? '승인 본문을 입력하고 게시 결과를 확인합니다.' : 'YouTube에서 댓글을 확인합니다.')
     try {
       const response = await fetch(endpoint + '/' + action, {
@@ -125,11 +151,13 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
         return
       }
       const data = await response.json()
+      setPostedUrl(data.commentUrl ?? '')
       setMessage(data.message ?? '댓글 작성 계정과 게시 시각을 게시 이력에 저장했습니다.')
     } catch {
       setMessage('서버 연결을 확인한 뒤 작업 이력을 다시 조회하세요.')
     } finally {
       saving.current = false
+      setPublishing(false)
       setChecking(false)
       refresh()
     }
@@ -137,7 +165,8 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
 
   return (
     <>
-      <p role="status">{message}</p>
+      <p role="status">{publishing && progress ? progress : message}</p>
+      {postedUrl && <a href={postedUrl} target="_blank" rel="noreferrer">게시한 댓글 보기</a>}
       {phase === 'loading' && <p>작업 이력을 확인하고 있습니다.</p>}
       {phase === 'error' && (
         <>
@@ -179,6 +208,9 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
               <li key={index}>
                 {new Date(event.occurredAt).toLocaleString('ko-KR')} ·{' '}
                 {labels[event.status] ?? event.status}
+                {event.failureReason && <p>{event.failureReason}</p>}
+                {event.screenshotPath && <a href={`/api/publication-failures/${encodeURIComponent(event.screenshotPath)}`}
+                  target="_blank" rel="noreferrer">실패 화면 보기</a>}
               </li>
             ))}
           </ol>

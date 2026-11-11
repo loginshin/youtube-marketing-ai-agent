@@ -23,13 +23,13 @@ public class JobHistoryService {
     public Optional<JobHistory> find(String videoId) {
         return jobs.findByVideoId(videoId).map(job -> {
             List<Event> history = events.findByJob_IdOrderByOccurredAtAscIdAsc(job.getId()).stream()
-                    .map(event -> new Event(event.getStatus(), event.getOccurredAt())).toList();
+                    .map(event -> new Event(event.getStatus(), event.getOccurredAt(), event.getFailureReason(), event.getScreenshotPath())).toList();
             return new JobHistory(job.getVideoId(), job.getProfileName(), job.getBody(),
                     job.getStatus(), job.getCreatedAt(), history);
         });
     }
 
-    public record Event(JobStatus status, Instant occurredAt) {}
+    public record Event(JobStatus status, Instant occurredAt, String failureReason, String screenshotPath) {}
     public record JobHistory(String videoId, String profile, String body, JobStatus status,
                              Instant createdAt, List<Event> events) {}
 }

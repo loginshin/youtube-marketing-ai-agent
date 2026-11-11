@@ -40,5 +40,8 @@ public class CommentJobEvent {
     public JobStatus getStatus() { return status; }
     public Instant getOccurredAt() { return occurredAt; }
 
+    public String getFailureReason() { return failureReason; }
+    public String getScreenshotPath() { return screenshotPath; }
+
     public Long getId() { return id; }
 }

@@ -17,17 +17,53 @@ class ChromePreparation {
     private BrowserContext context;
     private Page page;
 
-    record Result(String status, String message) {}
+    private volatile Progress progress;
+    record Progress(String videoId, String message) {}
+    Progress progress(String id) {
+        var current = progress;
+        return current != null && current.videoId().equals(id) ? current : null;
+    }
 
-    CompletableFuture<String> publish(String videoId, String body, Runnable reserve) {
+    record Result(String status, String message, String commentUrl) {
+        Result(String status, String message) { this(status, message, null); }
+    }
+
+    CompletableFuture<String> publish(String videoId, String body, Runnable reserve,
+                                      java.util.function.Consumer<String> remember,
+                                      java.util.function.BiConsumer<String, String> recordFailure) {
         if (!checking.compareAndSet(false, true))
             throw new IllegalStateException("다른 Chrome 작업이 진행 중입니다.");
         return CompletableFuture.supplyAsync(() -> {
             try {
+                progress = new Progress(videoId, "Chrome 프로필 여는 중");
                 Result ready = inspect(videoId);
                 if (!"READY".equals(ready.status())) throw new IllegalStateException(ready.message());
-                return submitApproved(page, videoId, body, reserve);
-            } finally { checking.set(false); }
+                progress = new Progress(videoId, "댓글 입력 중");
+                String comment = submitApproved(page, videoId, body, () -> {
+                    reserve.run();
+                    progress = new Progress(videoId, "댓글 게시 결과 확인 중");
+                });
+                if (comment == null) {
+                    recordFailure.accept("게시 응답에서 댓글을 확인하지 못했습니다.", captureFailure());
+                    return null;
+                }
+                remember.accept(comment);
+                page.navigate("https://www.youtube.com/watch?v=" + videoId + "&hl=ko&lc=" + comment,
+                        new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED).setTimeout(20000));
+                page.locator("ytd-comments#comments").first().scrollIntoViewIfNeeded();
+                page.locator("ytd-comments #content-text")
+                        .and(page.getByText(body, new Page.GetByTextOptions().setExact(true)))
+                        .first().waitFor();
+                return comment;
+            } catch (RuntimeException failure) {
+                String reason = failure instanceof IllegalStateException ? failure.getMessage()
+                        : "Chrome에서 댓글 입력 또는 게시 결과 확인에 실패했습니다.";
+                recordFailure.accept(reason, captureFailure());
+                throw failure;
+            } finally {
+                progress = null;
+                checking.set(false);
+            }
         }, browserThread);
     }
 
@@ -70,6 +106,19 @@ class ChromePreparation {
         var json = new tools.jackson.databind.json.JsonMapper().readTree(response.body());
         var ids = json.findValuesAsString("commentId").stream().distinct().toList();
         return ids.size() == 1 && ids.getFirst().matches("[A-Za-z0-9_-]{1,256}") ? ids.getFirst() : null;
+    }
+
+    private String captureFailure() {
+        if (page == null || page.isClosed()) return null;
+        try {
+            Path directory = Path.of(System.getProperty("user.home"), ".clipdesk", "publication-failures");
+            java.nio.file.Files.createDirectories(directory);
+            Path file = directory.resolve(java.util.UUID.randomUUID() + ".png");
+            page.screenshot(new Page.ScreenshotOptions().setPath(file).setTimeout(5000));
+            return file.getFileName().toString();
+        } catch (java.io.IOException | PlaywrightException error) {
+            return null;
+        }
     }
 
     private Result inspect(String videoId) {

@@ -68,6 +68,11 @@ public class PublicationStore {
         return row;
     }
 
+    @Transactional
+    public void recordFailure(String video, String reason, String screenshot) {
+        events.save(new CommentJobEvent(job(video), JobStatus.FAILED, Instant.now(), reason, screenshot));
+    }
+
     private void transition(CommentJob job, JobStatus status) {
         job.setPublicationStatus(status);
         events.save(new CommentJobEvent(job, status, Instant.now(), null, null));

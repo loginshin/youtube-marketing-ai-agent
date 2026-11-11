@@ -33,6 +33,21 @@ class PublicationController {
         return history.findAll(PageRequest.of(0, 100, Sort.by("publishedAt", "commentId").descending())).getContent();
     }
 
+    @GetMapping(value = "/publication-failures/{file:[a-f0-9-]+\\.png}", produces = "image/png")
+    org.springframework.core.io.Resource failureScreenshot(@PathVariable String file) {
+        if (!file.matches("[a-f0-9-]{36}\\.png")) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        var path = java.nio.file.Path.of(System.getProperty("user.home"), ".clipdesk", "publication-failures", file);
+        if (!java.nio.file.Files.isRegularFile(path)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new org.springframework.core.io.FileSystemResource(path);
+    }
+
+    @GetMapping("/videos/{id:[a-zA-Z0-9_-]{11}}/job/progress")
+    org.springframework.http.ResponseEntity<ChromePreparation.Progress> progress(@PathVariable String id) {
+        var progress = chrome.progress(id);
+        return progress == null ? org.springframework.http.ResponseEntity.noContent().build()
+                : org.springframework.http.ResponseEntity.ok(progress);
+    }
+
     @PostMapping(value = "/videos/{id:[a-zA-Z0-9_-]{11}}/job/publish", consumes = "application/json")
     ChromePreparation.Result publish(@PathVariable String id) {
         var job = store.job(id);
@@ -40,11 +55,12 @@ class PublicationController {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         try {
             var title = title(id);
-            var commentId = chrome.publish(id, job.getBody(), () -> store.reserve(id)).join();
+            var commentId = chrome.publish(id, job.getBody(), () -> store.reserve(id),
+                    comment -> store.remember(id, comment),
+                    (reason, image) -> store.recordFailure(id, reason, image)).join();
             if (commentId != null) {
-                store.remember(id, commentId);
                 verify(id, title, commentId);
-                return new ChromePreparation.Result("COMPLETED", "게시된 댓글과 작성 계정을 확인해 이력에 저장했습니다.");
+                return new ChromePreparation.Result("COMPLETED", "게시 완료 · 댓글 보기", "https://www.youtube.com/watch?v=" + id + "&lc=" + commentId);
             }
         } catch (CompletionException ex) {
             if (ex.getCause() instanceof ResponseStatusException rejected) throw rejected;
