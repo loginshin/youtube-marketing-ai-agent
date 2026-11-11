@@ -3,6 +3,7 @@ export type Video = {
   title: string
   channel: string
   date: string
+  thumbnailUrl?: string | null
   art: string
   color: string
   concern: string

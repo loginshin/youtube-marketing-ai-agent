@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Video } from './types'
 
-type Summary = Pick<Video, 'id' | 'title' | 'channel' | 'date'>
+type Summary = Pick<Video, 'id' | 'title' | 'channel' | 'date' | 'thumbnailUrl'>
+const koreanDate = new Intl.DateTimeFormat('ko-KR', {
+  timeZone: 'Asia/Seoul',
+  dateStyle: 'long',
+})
 type Detail = Summary & {
   description: string
   comments: string[]
@@ -60,6 +64,7 @@ export function useVideoSearch() {
         setItems(
           results.map((item) => ({
             ...item,
+            date: koreanDate.format(new Date(item.date)),
             art: '▶',
             color: '#365862',
             concern: '',

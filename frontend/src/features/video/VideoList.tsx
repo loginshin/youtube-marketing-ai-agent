@@ -23,11 +23,20 @@ export function VideoList({
           onClick={() => onSelect(v.id)}
         >
           <span
-            className="thumb"
+            className={v.thumbnailUrl ? 'thumb video-thumbnail' : 'thumb'}
             aria-hidden="true"
             style={{ background: v.color }}
           >
             {v.art}
+            {v.thumbnailUrl && (
+              <img
+                key={v.thumbnailUrl}
+                src={v.thumbnailUrl}
+                alt=""
+                loading="lazy"
+                onError={(event) => { event.currentTarget.hidden = true }}
+              />
+            )}
           </span>
           <span>
             <strong>{v.title}</strong>
