@@ -160,6 +160,8 @@ select {
   font-size: 14px;
   min-height: 36px;
 }
+.search-options { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; }
+.search-options label { display: inline-flex; align-items: center; gap: 6px; }
 .video-search { margin-bottom: 18px; }
 .list-heading, .length-filter, .settings-actions {
   display: flex;

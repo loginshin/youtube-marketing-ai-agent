@@ -13,7 +13,9 @@ export type Detail = Summary & {
   warning: string | null
 }
 
-type Workspace = { query: string; items: Video[]; detail: Detail }
+type Filters = { order: string; days: string }
+const defaults = { order: "date", days: "0" }
+type Workspace = { filters?: Filters; query: string; items: Video[]; detail: Detail }
 
 function restore(): Workspace | null {
   try { return JSON.parse(sessionStorage.getItem('clipdesk.workspace') ?? 'null') }
@@ -23,12 +25,14 @@ function restore(): Workspace | null {
 export function useVideoSearch() {
   const [restored] = useState(restore)
   const [query, setQuery] = useState(restored?.query ?? '연애')
+  const [filters, setFilters] = useState(restored?.filters ?? defaults)
+  const [applied, setApplied] = useState(restored?.filters ?? defaults)
   const [items, setItems] = useState<Video[]>(restored?.items ?? [])
-  const [nextPage, setNextPage] = useState<{ token: string; query: string } | null>(null)
+  const [nextPage, setNextPage] = useState<{ token: string; query: string; after?: string } | null>(null)
   const [detail, setDetail] = useState<Detail | null>(restored?.detail ?? null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(
-    restored ? '이전 영상 작업을 복원했습니다.' : '검색 버튼을 눌러 최신 영상을 불러오세요.',
+    restored ? '이전 영상 작업을 복원했습니다.' : '검색 버튼을 눌러 영상을 불러오세요.',
   )
   const request = useRef<AbortController | null>(null)
   useEffect(() => () => request.current?.abort(), [])
@@ -37,13 +41,17 @@ export function useVideoSearch() {
     if (request.current) return
     if (append && !nextPage) return
     const searchQuery = append && nextPage ? nextPage.query : query.trim()
-    const params = new URLSearchParams({ query: searchQuery })
+    const params = new URLSearchParams({ query: searchQuery, order: filters.order })
+    const after = append ? nextPage?.after : Number(filters.days) > 0
+      ? new Date(Date.now() - Number(filters.days) * 86400000).toISOString() : undefined
+    if (after) params.set("publishedAfter", after)
     if (append && nextPage) params.set('pageToken', nextPage.token)
     const controller = new AbortController()
     request.current = controller
     setBusy(true)
     if (!append) setDetail(null)
     if (!id && !append) {
+      setApplied(filters)
       setItems([])
       setNextPage(null)
       sessionStorage.removeItem('clipdesk.workspace')
@@ -51,7 +59,7 @@ export function useVideoSearch() {
     setMessage(
       id
         ? '영상 설명과 댓글을 불러오는 중입니다.'
-        : '최신 영상을 검색하고 있습니다.',
+        : '영상을 검색하고 있습니다.',
     )
     try {
       const response = await fetch(
@@ -77,7 +85,7 @@ export function useVideoSearch() {
       if (id) {
         const selected = data as Detail
         setDetail(selected)
-        try { sessionStorage.setItem('clipdesk.workspace', JSON.stringify({ query, items, detail: selected })) }
+        try { sessionStorage.setItem('clipdesk.workspace', JSON.stringify({ query, filters: applied, items, detail: selected })) }
         catch { setMessage('브라우저에 마지막 영상 위치를 저장하지 못했습니다.'); return }
         setMessage('영상 설명과 공개 댓글을 불러왔습니다.')
       } else {
@@ -96,7 +104,7 @@ export function useVideoSearch() {
           return [...new Map(combined.map((video) => [video.id, video])).values()]
         })
         const token = response.headers.get('X-Next-Page-Token')
-        setNextPage(token ? { token, query: searchQuery } : null)
+        setNextPage(token ? { token, query: searchQuery, after } : null)
         setMessage(
           results.length
             ? '분석할 영상을 선택하세요.'
@@ -116,7 +124,7 @@ export function useVideoSearch() {
     }
   }
 
-  return { query, setQuery, items, detail, busy, message, load,
-    hasMore: nextPage !== null && nextPage.query === query.trim(),
+  return { filters, setFilters, query, setQuery, items, detail, busy, message, load,
+    hasMore: nextPage !== null && nextPage.query === query.trim() && filters.order === applied.order && filters.days === applied.days,
     loadMore: () => load(undefined, true) }
 }
