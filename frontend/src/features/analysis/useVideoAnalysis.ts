@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import type { VideoContext } from './analysisApi'
 
 type Stage = 'SUMMARY' | 'DRAFT' | 'READY' | 'FAILED' | 'INSUFFICIENT'
-type Snapshot = { stage: Stage; attempt: string; concern: string; evidence: string; draft: string }
+type Snapshot = { startedAt?: string; failureReason?: string; analysisType?: string; stage: Stage; attempt: string; concern: string; evidence: string; draft: string }
 type Edits = { attempt: string; evidence?: string; draft?: string }
 const messages: Record<Stage, string> = {
-  SUMMARY: '서버에서 영상 설명과 공개 댓글을 분석하고 있습니다.',
+  SUMMARY: '서버에서 AI 분석을 진행하고 있습니다.',
   DRAFT: '서버에서 댓글 초안을 생성하고 있습니다.',
   READY: '저장된 초안입니다. 근거와 본문을 검토해주세요.',
   FAILED: '생성이 중단되었습니다. 저장된 근거와 초안을 확인하고 다시 시도하세요.',
@@ -72,14 +72,13 @@ export function useVideoAnalysis(video: VideoContext | null) {
   const busy = submitting || !job || job.stage === 'SUMMARY' || job.stage === 'DRAFT'
   const evidence = current?.edits?.evidence ?? job?.evidence ?? ''
   return {
-    busy, concern: job?.concern ?? '', evidence, draft: current?.edits?.draft ?? job?.draft ?? '',
+    job, busy, concern: job?.concern ?? '', evidence, draft: current?.edits?.draft ?? job?.draft ?? '',
     message: error || (job ? messages[job.stage] : '저장된 작업을 확인하고 있습니다.'),
     reconnect: error && video ? () => { setError(''); setAction({ id: video.id }) } : null,
     retrySummary: job?.stage === 'FAILED' && !evidence.trim(),
     regenerate: () => {
       if (video && job && !busy) {
         setSubmitting(true)
-        setSubmitting(false)
         setError('')
         setAction({ id: video.id, attempt: job.attempt, evidence })
       }

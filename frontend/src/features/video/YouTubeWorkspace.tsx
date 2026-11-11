@@ -1,3 +1,5 @@
+import { AnalysisProgress } from '../analysis/AnalysisProgress'
+import { AnalysisHistory } from '../analysis/AnalysisHistory'
 import { ApprovalPanel } from '../comment/ApprovalPanel'
 import { useVideoAnalysis } from '../analysis/useVideoAnalysis'
 import type { Detail } from './useVideoSearch'
@@ -10,7 +12,7 @@ import { useVideoSearch } from './useVideoSearch'
 
 export function YouTubeWorkspace() {
 
-  const { filters, changeFilters, query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
+  const { selectedId, detailBusy, detailMessage, filters, changeFilters, query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
     useVideoSearch()
   const [format, setFormat] = useState('all')
   const visibleItems = items.filter(({ durationSeconds }) => {
@@ -18,7 +20,8 @@ export function YouTubeWorkspace() {
     if (durationSeconds == null) return false
     return format === 'short' ? durationSeconds <= 180 : durationSeconds > 180
   })
-  const selected = detail && visibleItems.some(item => item.id === detail.id) ? detail : null
+  const selectedItem = visibleItems.find(item => item.id === selectedId)
+  const selected = selectedItem && detail?.id === selectedId ? detail : null
 
   return (
     <>
@@ -57,7 +60,7 @@ export function YouTubeWorkspace() {
         </button>
       </form>
       {items.length > 0 && <p role="status">{message}</p>}
-      <div className={selected ? 'dashboard' : 'results-only'}>
+      <div className={selectedItem ? 'dashboard' : 'results-only'}>
         <section>
           <div className="list-heading">
             <h2>영상 목록</h2>
@@ -82,7 +85,7 @@ export function YouTubeWorkspace() {
           )}
           <VideoList
             items={visibleItems}
-            selected={detail?.id ?? ''}
+            selected={selectedId}
             disabled={busy}
             onSelect={(id) => void load(id)}
           />
@@ -92,6 +95,13 @@ export function YouTubeWorkspace() {
             </button>
           )}
         </section>
+        {selectedItem && !selected && <section aria-busy={detailBusy}>
+          <h2>분석과 초안</h2>
+          <h3>{selectedItem.title}</h3>
+          {detailBusy && <progress aria-label="영상 정보 불러오는 중" />}
+          <p role="status">{detailMessage}</p>
+          {!detailBusy && <button onClick={() => void load(selectedId)}>다시 불러오기</button>}
+        </section>}
         {selected && <SelectedVideo key={selected.id} detail={selected} />}
       </div>
     </>
@@ -140,6 +150,8 @@ function SelectedVideo({ detail }: { detail: Detail }) {
           )}
         </details>
         <p role="status">{analysis.message}</p>
+        <AnalysisProgress videoId={video.id} title={video.title} job={analysis.job} />
+        {!analysis.busy && <AnalysisHistory key={analysis.job?.attempt} videoId={video.id} />}
         {analysis.reconnect && <button onClick={analysis.reconnect}>작업 다시 연결</button>}
         {analysis.retrySummary && (
           <button onClick={analysis.regenerate}>영상 분석 다시 시도</button>
