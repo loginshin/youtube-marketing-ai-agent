@@ -48,9 +48,25 @@ public class GeminiVideoService {
                 .body(Map.of("contents", List.of(Map.of("parts", parts)),
                         "generationConfig", Map.of("responseMimeType", "application/json")))
                 .retrieve().body(String.class);
+        if (body == null || body.isBlank()) throw new AnalysisFailure("Gemini가 빈 응답을 반환했습니다.");
         var response = json.readTree(body);
-        var text = response.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
-        var result = json.readTree(text);
+        var candidate = response.path("candidates").path(0);
+        String finish = candidate.path("finishReason").asText("");
+        if ("MAX_TOKENS".equals(finish)) throw new AnalysisFailure("Gemini의 출력 한도에 도달해 분석 응답이 잘렸습니다.");
+        if (!"STOP".equals(finish)) throw new AnalysisFailure("Gemini가 영상 분석을 완료하지 못했습니다. 영상 접근 가능 여부를 확인해주세요.");
+        StringBuilder text = new StringBuilder();
+        for (var part : candidate.path("content").path("parts")) {
+            if (!part.path("thought").asBoolean(false) && part.path("text").isString()) {
+                text.append(part.path("text").asText());
+            }
+        }
+        if (text.isEmpty()) throw new AnalysisFailure("Gemini 응답에 분석 본문이 없습니다.");
+        tools.jackson.databind.JsonNode result;
+        try {
+            result = json.readTree(text.toString());
+        } catch (tools.jackson.core.JacksonException exception) {
+            throw new AnalysisFailure("Gemini 분석 응답을 JSON으로 읽지 못했습니다.");
+        }
         String summary = result.path("summary").asText("");
         String evidence = result.path("evidence").asText("");
         String timestamp = result.path("timestamp").asText("");
@@ -59,5 +75,9 @@ public class GeminiVideoService {
             return new VideoSummaryService.Result("insufficient", null, null, null);
         }
         return new VideoSummaryService.Result("ready", summary, "영상 분석 · " + timestamp, evidence);
+    }
+
+    public static class AnalysisFailure extends RuntimeException {
+        public AnalysisFailure(String message) { super(message); }
     }
 }
