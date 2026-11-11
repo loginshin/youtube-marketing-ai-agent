@@ -7,7 +7,7 @@ const koreanDate = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   dateStyle: 'long',
 })
-type Detail = Summary & {
+export type Detail = Summary & {
   description: string
   comments: string[]
   warning: string | null

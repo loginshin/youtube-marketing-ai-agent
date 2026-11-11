@@ -1,6 +1,6 @@
 import { ApprovalPanel } from '../comment/ApprovalPanel'
 import { useVideoAnalysis } from '../analysis/useVideoAnalysis'
-import { AnalysisHistory } from '../analysis/AnalysisHistory'
+import type { Detail } from './useVideoSearch'
 import { useState } from 'react'
 import { DraftEditor } from '../analysis/DraftEditor'
 import { VideoList } from './VideoList'
@@ -18,17 +18,7 @@ export function YouTubeWorkspace() {
     if (durationSeconds == null) return false
     return format === 'short' ? durationSeconds <= 180 : durationSeconds > 180
   })
-  const analysis = useVideoAnalysis(detail)
-  const video: Video | null = detail && visibleItems.some((item) => item.id === detail.id)
-    ? {
-        ...detail,
-        art: '▶',
-        color: '#365862',
-        concern: analysis?.concern ?? '',
-        evidence: analysis?.evidence ?? '',
-        draft: analysis?.draft ?? '',
-      }
-    : null
+  const selected = detail && visibleItems.some(item => item.id === detail.id) ? detail : null
 
   return (
     <>
@@ -52,7 +42,7 @@ export function YouTubeWorkspace() {
         </button>
       </form>
       {items.length > 0 && <p role="status">{message}</p>}
-      <div className={video ? 'dashboard' : 'results-only'}>
+      <div className={selected ? 'dashboard' : 'results-only'}>
         <section>
           <div className="list-heading">
             <h2>영상 목록</h2>
@@ -87,73 +77,74 @@ export function YouTubeWorkspace() {
             </button>
           )}
         </section>
-        <section hidden={!video}>
-          <h2>분석과 초안</h2>
-          {video && detail ? (
-            <>
-              <a
-                href={`https://www.youtube.com/watch?v=${encodeURIComponent(video.id)}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                YouTube에서 영상 확인
-              </a>
-              <details>
-                <summary>영상 설명과 공개 댓글</summary>
-                <h3>영상 설명</h3>
-                <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                  {detail.description || '설명이 없습니다.'}
-                </p>
-                <h3>관련도순 공개 댓글</h3>
-                {detail.warning && <p role="status">{detail.warning}</p>}
-                {detail.comments.length ? (
-                  <ul>
-                    {detail.comments.map((comment, index) => (
-                      <li key={index}>{comment}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>조회 가능한 댓글이 없습니다.</p>
-                )}
-              </details>
-              <p role="status">{analysis?.message}</p>
-              {analysis.reconnect && <button onClick={analysis.reconnect}>작업 다시 연결</button>}
-              {analysis.retrySummary && (
-                <button onClick={analysis.regenerate}>영상 분석 다시 시도</button>
-              )}
-              {analysis?.busy && analysis.concern && <p>{analysis.concern}</p>}
-              {analysis && !analysis.busy && (
-                <DraftEditor
-                  key={video.id}
-                  video={video}
-                  evidence={video.evidence}
-                  onEvidenceChange={(text) => analysis.edit({ evidence: text })}
-                  draft={video.draft}
-                  onEdit={(text) => analysis.edit({ draft: text })}
-                  onGenerate={analysis.regenerate}
-                  actualVideo
-                />
-              )}
-              {!analysis.busy && <AnalysisHistory key={video.id} videoId={video.id} />}
-            </>
-          ) : (
-            <p>검색 후 영상을 선택해주세요.</p>
-          )}
-        </section>
-        <section hidden={!video}>
-          <h2>작업 상태</h2>
-          {video ? (
-            <ApprovalPanel
-              key={video.id}
-              videoId={video.id}
-              title={video.title}
-              draft={video.draft}
-            />
-          ) : (
-            <p>영상을 선택하면 승인 본문과 이력을 확인할 수 있습니다.</p>
-          )}
-        </section>
+        {selected && <SelectedVideo key={selected.id} detail={selected} />}
       </div>
+    </>
+  )
+}
+
+function SelectedVideo({ detail }: { detail: Detail }) {
+  const analysis = useVideoAnalysis(detail)
+  const video: Video = {
+    ...detail, art: '▶', color: '#365862',
+    concern: analysis.concern, evidence: analysis.evidence, draft: analysis.draft,
+  }
+
+  return (
+    <>
+      <section>
+        <h2>분석과 초안</h2>
+        <a
+          href={`https://www.youtube.com/watch?v=${encodeURIComponent(video.id)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          YouTube에서 영상 확인
+        </a>
+        <details>
+          <summary>영상 설명과 공개 댓글</summary>
+          <h3>영상 설명</h3>
+          <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+            {detail.description || '설명이 없습니다.'}
+          </p>
+          <h3>관련도순 공개 댓글</h3>
+          {detail.warning && <p role="status">{detail.warning}</p>}
+          {detail.comments.length ? (
+            <ul>
+              {detail.comments.map((comment, index) => (
+                <li key={index}>{comment}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>조회 가능한 댓글이 없습니다.</p>
+          )}
+        </details>
+        <p role="status">{analysis.message}</p>
+        {analysis.reconnect && <button onClick={analysis.reconnect}>작업 다시 연결</button>}
+        {analysis.retrySummary && (
+          <button onClick={analysis.regenerate}>영상 분석 다시 시도</button>
+        )}
+        {analysis.busy && analysis.concern && <p>{analysis.concern}</p>}
+        {!analysis.busy && (
+          <DraftEditor
+            video={video}
+            evidence={video.evidence}
+            onEvidenceChange={(text) => analysis.edit({ evidence: text })}
+                draft={video.draft}
+            onEdit={(text) => analysis.edit({ draft: text })}
+            onGenerate={analysis.regenerate}
+            actualVideo
+          />
+        )}
+      </section>
+      <section>
+        <h2>작업 상태</h2>
+        <ApprovalPanel
+          videoId={video.id}
+          title={video.title}
+          draft={video.draft}
+        />
+      </section>
     </>
   )
 }
