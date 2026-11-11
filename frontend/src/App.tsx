@@ -1,6 +1,6 @@
 import { PromptSettings } from './features/analysis/PromptSettings'
 import { UsageDashboard } from './features/usage/UsageDashboard'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ExampleWorkspace } from './features/video/ExampleWorkspace'
 import { YouTubeWorkspace } from './features/video/YouTubeWorkspace'
 import { useServerHealth } from './shared/useServerHealth'
@@ -18,6 +18,12 @@ export default function App() {
     prompt: 'AI 설정',
     usage: 'API 사용량',
   }[workspace]
+
+  useEffect(() => {
+    document.title = `클립데스크 | ${page}`
+    const icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
+    if (icon) icon.href = '/favicon.svg'
+  }, [page])
 
   return (
     <div className="shell">
