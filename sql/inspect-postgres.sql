@@ -60,3 +60,7 @@ FROM public.api_usage_event ORDER BY occurred_at DESC, id DESC LIMIT 100;
 
 -- 10. 영상별 AI 생성 상태와 저장된 초안
 SELECT video_id, stage, concern, evidence, draft FROM public.video_analysis ORDER BY video_id;
+
+-- 11. 영상별 AI 생성 이력 (과거 데이터의 기록 시각은 NULL)
+SELECT video_id, recorded_at AT TIME ZONE 'Asia/Seoul' AS time_kst, outcome, evidence, draft
+FROM public.analysis_revision ORDER BY recorded_at DESC NULLS LAST, video_id;

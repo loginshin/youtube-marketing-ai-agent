@@ -19,12 +19,14 @@ import static com.marketing.agent.analysis.work.VideoAnalysis.Stage.*;
 class VideoAnalysisWork implements ApplicationRunner {
     private final VideoAnalysisRepository jobs;
     private final VideoSummaryService summaries;
+    private final AnalysisCompletion completion;
     private final DraftService drafts;
     private final CommentPromptService settings;
     private final ExecutorService workers = Executors.newFixedThreadPool(3);
 
-    VideoAnalysisWork(VideoAnalysisRepository jobs, VideoSummaryService summaries, DraftService drafts, CommentPromptService settings) {
+    VideoAnalysisWork(VideoAnalysisRepository jobs, VideoSummaryService summaries, DraftService drafts, CommentPromptService settings, AnalysisCompletion completion) {
         this.jobs = jobs;
+        this.completion = completion;
         this.summaries = summaries;
         this.drafts = drafts;
         this.settings = settings;
@@ -34,7 +36,7 @@ class VideoAnalysisWork implements ApplicationRunner {
         // This local server owns the workers. An interrupted paid call requires explicit retry.
         for (var job : jobs.findAllByStageIn(List.of(SUMMARY, DRAFT))) {
             job.stage = FAILED;
-            jobs.save(job);
+            completion.finish(job);
         }
     }
 
@@ -73,7 +75,7 @@ class VideoAnalysisWork implements ApplicationRunner {
                 var summary = summaries.summarize(input.title(), input.description(), input.comments(), config.modelTier());
                 if (!"ready".equals(summary.status())) {
                     job.stage = INSUFFICIENT;
-                    jobs.save(job);
+                    completion.finish(job);
                     return;
                 }
                 job.concern = summary.summary();
@@ -87,7 +89,7 @@ class VideoAnalysisWork implements ApplicationRunner {
         } catch (RuntimeException exception) {
             job.stage = FAILED;
         }
-        jobs.saveAndFlush(job);
+        completion.finish(job);
     }
 
     record Input(String title, String description, List<String> comments) {

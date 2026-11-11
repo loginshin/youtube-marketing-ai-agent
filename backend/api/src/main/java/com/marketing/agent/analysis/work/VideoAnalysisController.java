@@ -8,7 +8,17 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/analysis/videos/{id:[a-zA-Z0-9_-]{11}}")
 class VideoAnalysisController {
     private final VideoAnalysisWork work;
-    VideoAnalysisController(VideoAnalysisWork work) { this.work = work; }
+    private final AnalysisRevisionRepository revisions;
+
+    VideoAnalysisController(VideoAnalysisWork work, AnalysisRevisionRepository revisions) {
+        this.work = work;
+        this.revisions = revisions;
+    }
+
+    @GetMapping("/history")
+    java.util.List<AnalysisRevisionRepository.Entry> history(@PathVariable String id) {
+        return revisions.history(id);
+    }
 
     @GetMapping VideoAnalysis.Snapshot current(@PathVariable String id) { return work.get(id).snapshot(); }
 

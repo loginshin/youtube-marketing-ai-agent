@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 class VideoAnalysisWorkTests {
     @LocalServerPort int port;
     @MockitoBean OpenAiClient ai;
+    @org.springframework.beans.factory.annotation.Autowired AnalysisRevisionRepository revisions;
     private final HttpClient http = HttpClient.newHttpClient();
     private final JsonMapper json = new JsonMapper();
     private static final String INPUT = """
@@ -46,6 +47,22 @@ class VideoAnalysisWorkTests {
         assertEquals(draft, result.draft());
         assertEquals(result, request(INPUT));
         verify(ai, times(2)).generate(any(), anyString(), anyString());
+        String revised = "나".repeat(40);
+        when(ai.generate(any(), anyString(), anyString())).thenReturn(revised);
+        var retry = new VideoAnalysisController.Retry(
+                json.readValue(INPUT, VideoAnalysisWork.Input.class), result.attempt(), "수정된 영상 근거");
+        var retryRequest = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/analysis/videos/abcdefghijk/retry"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(retry))).build();
+        assertEquals(200, http.send(retryRequest, HttpResponse.BodyHandlers.ofString()).statusCode());
+        for (int check = 0; check < 100 && revisions.history("abcdefghijk").size() < 2; check++) {
+            Thread.sleep(50);
+        }
+        var history = revisions.history("abcdefghijk");
+        assertEquals(2, history.size());
+        assertEquals(revised, history.getFirst().draft());
+        assertEquals(draft, history.getLast().draft());
+        assertNotNull(history.getFirst().recordedAt());
     }
 
     private VideoAnalysis.Snapshot request(String body) throws Exception {
