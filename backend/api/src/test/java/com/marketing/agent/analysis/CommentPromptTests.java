@@ -19,8 +19,26 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:comment-prompt-test")
 class CommentPromptTests {
+    @Autowired com.marketing.agent.analysis.application.VideoAnalysisSettingsService videoSettings;
     @Autowired AnalysisController analysis;
     @MockitoBean OpenAiClient ai;
+
+    @org.junit.jupiter.api.Test
+    void videoSettingsArePersistedIndependentlyAndRejectStaleUpdates() {
+        var contentSettings = analysis.prompt();
+        var original = videoSettings.current();
+        var update = new com.marketing.agent.analysis.application.VideoAnalysisSettingsService.Update(
+                "실제 발언과 화면의 고민을 요약하세요.", original.version(), "gemini-2.5-pro");
+        var saved = videoSettings.save(update);
+        assertEquals(saved, videoSettings.current());
+        assertEquals(contentSettings, analysis.prompt());
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> videoSettings.save(update)).getStatusCode().value());
+        var invalid = new com.marketing.agent.analysis.application.VideoAnalysisSettingsService.Update(
+                "분석하세요.", saved.version(), "unknown");
+        assertEquals(400, assertThrows(ResponseStatusException.class,
+                () -> videoSettings.save(invalid)).getStatusCode().value());
+    }
 
     @Sql(statements = "UPDATE comment_prompt SET model_tier = 'STANDARD' WHERE id = 1")
     @ParameterizedTest

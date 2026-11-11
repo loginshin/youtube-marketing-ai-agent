@@ -20,11 +20,15 @@ class VideoAnalysisWork implements ApplicationRunner {
     private final VideoAnalysisRepository jobs;
     private final VideoSummaryService summaries;
     private final AnalysisCompletion completion;
+    private final com.marketing.agent.ai.GeminiVideoService videoAnalyzer;
+    private final com.marketing.agent.analysis.application.VideoAnalysisSettingsService videoSettings;
     private final DraftService drafts;
     private final CommentPromptService settings;
     private final ExecutorService workers = Executors.newFixedThreadPool(3);
 
-    VideoAnalysisWork(VideoAnalysisRepository jobs, VideoSummaryService summaries, DraftService drafts, CommentPromptService settings, AnalysisCompletion completion) {
+    VideoAnalysisWork(VideoAnalysisRepository jobs, VideoSummaryService summaries, DraftService drafts, CommentPromptService settings, AnalysisCompletion completion, com.marketing.agent.ai.GeminiVideoService videoAnalyzer, com.marketing.agent.analysis.application.VideoAnalysisSettingsService videoSettings) {
+        this.videoSettings = videoSettings;
+        this.videoAnalyzer = videoAnalyzer;
         this.jobs = jobs;
         this.completion = completion;
         this.summaries = summaries;
@@ -49,9 +53,10 @@ class VideoAnalysisWork implements ApplicationRunner {
     }
 
     synchronized VideoAnalysis.Snapshot retry(String id, Input input, String previousAttempt, String evidence) {
+        if (Boolean.TRUE.equals(input.analyzeVideo())) videoAnalyzer.requireConfigured();
         var job = get(id);
         if (job.running() || !job.attempt.equals(previousAttempt)) return job.snapshot();
-        job.stage = evidence.isBlank() ? SUMMARY : DRAFT;
+        job.stage = Boolean.TRUE.equals(input.analyzeVideo()) || evidence.isBlank() ? SUMMARY : DRAFT;
         job.evidence = evidence;
         job.attempt = java.util.UUID.randomUUID().toString();
         return submit(job, input);
@@ -72,7 +77,9 @@ class VideoAnalysisWork implements ApplicationRunner {
         try {
             var config = settings.current();
             if (job.stage == SUMMARY) {
-                var summary = summaries.summarize(input.title(), input.description(), input.comments(), config.modelTier());
+                var videoConfig = videoSettings.current();
+                var summary = Boolean.TRUE.equals(input.analyzeVideo()) ? videoAnalyzer.analyze(job.videoId, videoConfig.modelTier(), videoConfig.instructions())
+                        : summaries.summarize(input.title(), input.description(), input.comments(), config.modelTier());
                 if (!"ready".equals(summary.status())) {
                     job.stage = INSUFFICIENT;
                     completion.finish(job);
@@ -92,7 +99,11 @@ class VideoAnalysisWork implements ApplicationRunner {
         completion.finish(job);
     }
 
-    record Input(String title, String description, List<String> comments) {
+    record Input(String title, String description, List<String> comments, Boolean analyzeVideo) {
+        Input(String title, String description, List<String> comments) {
+            this(title, description, comments, false);
+        }
+        @com.fasterxml.jackson.annotation.JsonCreator
         Input {
             if (title == null || title.isBlank() || title.length() > 300 || description == null ||
                 description.length() > 10000 || comments == null || comments.size() > 5 ||

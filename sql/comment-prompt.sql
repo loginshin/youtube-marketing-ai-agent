@@ -32,3 +32,13 @@ SET instructions = REPLACE(instructions,
 WHERE id = 1 AND instructions LIKE '%제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.%'
   AND LENGTH(instructions) - LENGTH('제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.')
       + LENGTH('작성자가 확인한 경험은 운명원에서 연애 사주를 본 적이 있다는 것입니다. 영상에서 짚은 고민이 그때 본 일을 떠올리게 하는 흐름으로, 운명원에서 봤다는 사실을 1인칭으로 한 번 담으세요. 구체적인 상담 내용이나 효과는 작성자가 따로 제공한 경우에만 쓰세요.') <= 4000;
+
+CREATE TABLE IF NOT EXISTS video_analysis_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    instructions VARCHAR(4000) NOT NULL,
+    model VARCHAR(80) NOT NULL,
+    version BIGINT NOT NULL DEFAULT 0
+);
+INSERT INTO video_analysis_settings (id, instructions, model)
+SELECT 1, '영상의 화면과 음성에서 연애 고민을 찾아 한 줄로 요약하세요. 고민이 드러나는 실제 발언이나 장면과 해당 시점을 근거로 제시하세요.', 'gemini-2.5-flash'
+WHERE NOT EXISTS (SELECT 1 FROM video_analysis_settings WHERE id = 1);
