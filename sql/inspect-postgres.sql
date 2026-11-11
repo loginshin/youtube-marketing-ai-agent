@@ -64,3 +64,8 @@ SELECT video_id, stage, concern, evidence, draft FROM public.video_analysis ORDE
 -- 11. 영상별 AI 생성 이력 (과거 데이터의 기록 시각은 NULL)
 SELECT video_id, recorded_at AT TIME ZONE 'Asia/Seoul' AS time_kst, outcome, evidence, draft
 FROM public.analysis_revision ORDER BY recorded_at DESC NULLS LAST, video_id;
+
+-- 12. 실제 게시를 확인한 댓글 이력 (한국 시간)
+SELECT published_at AT TIME ZONE 'Asia/Seoul' AS published_kst, profile_name, author_name,
+       author_channel_id, video_title, video_url, body, comment_url, verified_at
+FROM public.posted_comment ORDER BY published_at DESC;

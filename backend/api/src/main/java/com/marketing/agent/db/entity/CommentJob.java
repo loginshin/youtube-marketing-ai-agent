@@ -43,6 +43,10 @@ public class CommentJob {
     public String getProfileName() { return profileName; }
     public String getBody() { return body; }
     public JobStatus getStatus() { return status; }
+    private String pendingCommentId;
+    public String getPendingCommentId() { return pendingCommentId; }
+    public void rememberComment(String id) { pendingCommentId = id; }
+    public void setPublicationStatus(JobStatus status) { this.status = status; }
     public Instant getCreatedAt() { return createdAt; }
 
     public Long getId() { return id; }

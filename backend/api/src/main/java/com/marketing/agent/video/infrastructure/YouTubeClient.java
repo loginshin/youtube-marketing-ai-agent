@@ -91,6 +91,21 @@ public class YouTubeClient {
         if (key.isBlank()) throw new IllegalStateException("backend/.env에 YOUTUBE_API_KEY를 설정하세요.");
     }
 
+    public PublishedSnippet publishedComment(String id) {
+        requireKey();
+        var response = client.get().uri(builder -> builder.path("/comments").queryParam("part", "snippet")
+                .queryParam("textFormat", "plainText").queryParam("id", id).build())
+                .header("X-Goog-Api-Key", key).retrieve().body(PublishedResponse.class);
+        if (response == null || response.items() == null) return null;
+        return response.items().stream().filter(item -> id.equals(item.id())).map(PublishedItem::snippet).findFirst().orElse(null);
+    }
+
+    public record ChannelId(String value) {}
+    public record PublishedSnippet(String videoId, String parentId, String authorDisplayName, ChannelId authorChannelId,
+                                   String textDisplay, java.time.Instant publishedAt) {}
+    public record PublishedItem(String id, PublishedSnippet snippet) {}
+    public record PublishedResponse(List<PublishedItem> items) {}
+
     public record Thumbnail(String url) {}
     public record Snippet(String title, String channelTitle, String publishedAt, String description,
                           Map<String, Thumbnail> thumbnails) {

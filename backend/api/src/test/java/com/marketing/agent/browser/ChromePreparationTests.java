@@ -31,6 +31,24 @@ class ChromePreparationTests {
                     """);
             assertEquals("READY", ChromePreparation.inspectControls(page).status());
             assertEquals("", page.locator("[contenteditable]").innerText());
+            // Intercept every URL: no request reaches YouTube or a real account.
+            page.route("**/*", route -> {
+                if (route.request().url().contains("/create_comment"))
+                    route.fulfill(new Route.FulfillOptions().setContentType("application/json")
+                            .setBody("{\"commentId\":\"fixtureId\"}"));
+                else route.fulfill(new Route.FulfillOptions().setContentType("text/html; charset=utf-8").setBody("""
+                        <ytd-comment-simplebox-renderer style="display:block">
+                          <div contenteditable="true" style="min-height:20px"></div>
+                          <div id="submit-button"><button onclick="fetch('/youtubei/v1/comment/create_comment?test=1', {method:'POST'})">게시</button></div>
+                        </ytd-comment-simplebox-renderer>
+                        """));
+            });
+            page.navigate("https://www.youtube.com/watch?v=abcdefghijk");
+            var reservations = new java.util.concurrent.atomic.AtomicInteger();
+            assertEquals("fixtureId", ChromePreparation.submitApproved(page, "abcdefghijk", "확인한 댓글입니다.",
+                    reservations::incrementAndGet));
+            assertEquals("확인한 댓글입니다.", page.locator("[contenteditable]").innerText());
+            assertEquals(1, reservations.get());
         }
     }
 }

@@ -19,6 +19,18 @@ class ChromePreparation {
 
     record Result(String status, String message) {}
 
+    CompletableFuture<String> publish(String videoId, String body, Runnable reserve) {
+        if (!checking.compareAndSet(false, true))
+            throw new IllegalStateException("다른 Chrome 작업이 진행 중입니다.");
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Result ready = inspect(videoId);
+                if (!"READY".equals(ready.status())) throw new IllegalStateException(ready.message());
+                return submitApproved(page, videoId, body, reserve);
+            } finally { checking.set(false); }
+        }, browserThread);
+    }
+
     CompletableFuture<Result> prepare(String videoId) {
         if (!checking.compareAndSet(false, true))
             return CompletableFuture.completedFuture(new Result("BUSY", "다른 영상의 입력창을 확인하고 있습니다."));
@@ -31,6 +43,33 @@ class ChromePreparation {
                 checking.set(false);
             }
         }, browserThread);
+    }
+
+    static String submitApproved(Page page, String videoId, String body, Runnable reserve) {
+        var composer = page.locator("ytd-comment-simplebox-renderer:visible").first();
+        var editor = composer.locator("[contenteditable='true']:visible").first();
+        editor.fill("");
+        for (var character : body.codePoints().toArray()) {
+            page.keyboard().insertText(Character.toString(character));
+            page.waitForTimeout(25);
+        }
+        var location = java.net.URI.create(page.url());
+        boolean target = "www.youtube.com".equals(location.getHost()) &&
+                (("/shorts/" + videoId).equals(location.getPath()) ||
+                ("/watch".equals(location.getPath()) && location.getQuery() != null &&
+                        java.util.Arrays.asList(location.getQuery().split("&")).contains("v=" + videoId)));
+        if (!target || !editor.innerText().strip().equals(body))
+            throw new IllegalStateException("영상 또는 입력한 본문이 달라 게시를 중단했습니다.");
+        var submit = composer.locator("#submit-button button:visible").first();
+        if (!submit.isEnabled()) throw new IllegalStateException("게시 버튼이 활성화되지 않았습니다.");
+        reserve.run();
+        var response = page.waitForResponse(r -> r.url().startsWith("https://www.youtube.com/youtubei/v1/comment/create_comment?")
+                        || r.url().equals("https://www.youtube.com/youtubei/v1/comment/create_comment"),
+                () -> submit.click());
+        if (!response.ok()) return null;
+        var json = new tools.jackson.databind.json.JsonMapper().readTree(response.body());
+        var ids = json.findValuesAsString("commentId").stream().distinct().toList();
+        return ids.size() == 1 && ids.getFirst().matches("[A-Za-z0-9_-]{1,256}") ? ids.getFirst() : null;
     }
 
     private Result inspect(String videoId) {
