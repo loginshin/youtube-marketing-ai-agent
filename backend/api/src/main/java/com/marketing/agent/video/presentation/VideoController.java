@@ -4,6 +4,7 @@ import com.marketing.agent.video.application.VideoQueryService;
 import com.marketing.agent.video.application.VideoQueryService.VideoDetail;
 import com.marketing.agent.video.application.VideoQueryService.VideoSummary;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +21,12 @@ public class VideoController {
     }
 
     @GetMapping
-    public List<VideoSummary> search(@RequestParam(defaultValue = "연애") String query) {
-        return videos.search(query);
+    public ResponseEntity<List<VideoSummary>> search(@RequestParam(defaultValue = "연애") String query,
+                                                      @RequestParam(required = false) String pageToken) {
+        var page = videos.search(query, pageToken);
+        var response = ResponseEntity.ok();
+        if (page.nextPageToken() != null) response.header("X-Next-Page-Token", page.nextPageToken());
+        return response.body(page.items());
     }
 
     @GetMapping("/{id}")

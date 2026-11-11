@@ -24,14 +24,31 @@ public class YouTubeClient {
                 .requestFactory(factory).build();
     }
 
-    public List<SearchItem> search(String query) {
+    public SearchResponse search(String query, String pageToken) {
         requireKey();
         SearchResponse response = client.get().uri(builder -> builder.path("/search")
                 .queryParam("part", "snippet").queryParam("type", "video")
                 .queryParam("order", "date").queryParam("maxResults", 10)
+                .queryParamIfPresent("pageToken", java.util.Optional.ofNullable(pageToken))
                 .queryParam("q", query).build()).header("X-Goog-Api-Key", key)
                 .retrieve().body(SearchResponse.class);
-        return response == null || response.items() == null ? List.of() : response.items();
+        return response == null || response.items() == null ? new SearchResponse(List.of(), null) : response;
+    }
+
+    public Map<String, Long> durations(List<String> ids) {
+        if (ids.isEmpty()) return Map.of();
+        VideoResponse response = client.get().uri(builder -> builder.path("/videos")
+                .queryParam("part", "contentDetails").queryParam("id", String.join(",", ids)).build())
+                .header("X-Goog-Api-Key", key).retrieve().body(VideoResponse.class);
+        Map<String, Long> seconds = new java.util.HashMap<>();
+        if (response != null && response.items() != null) {
+            for (VideoItem item : response.items()) {
+                if (item.contentDetails() == null || item.contentDetails().duration() == null) continue;
+                long duration = Duration.parse(item.contentDetails().duration()).toSeconds();
+                if (duration > 0) seconds.put(item.id(), duration);
+            }
+        }
+        return seconds;
     }
 
     public VideoItem video(String id) {
@@ -82,8 +99,9 @@ public class YouTubeClient {
     }
     public record SearchId(String videoId) {}
     public record SearchItem(SearchId id, Snippet snippet) {}
-    public record SearchResponse(List<SearchItem> items) {}
-    public record VideoItem(String id, Snippet snippet) {}
+    public record SearchResponse(List<SearchItem> items, String nextPageToken) {}
+    public record ContentDetails(String duration) {}
+    public record VideoItem(String id, Snippet snippet, ContentDetails contentDetails) {}
     public record VideoResponse(List<VideoItem> items) {}
     public record CommentSnippet(String textDisplay) {}
     public record TopComment(CommentSnippet snippet) {}
