@@ -28,6 +28,7 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
   const [message, setMessage] = useState('')
   const saving = useRef(false)
   const [checking, setChecking] = useState(false)
+  const [commentLink, setCommentLink] = useState('')
   const profile = '유튜브 1'
   const body = draft.trim()
   const length = Array.from(body).length
@@ -108,6 +109,32 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
     }
   }
 
+  async function publication(action: 'publish' | 'verify') {
+    if (checking || saving.current) return
+    saving.current = true
+    setChecking(true)
+    setMessage(action === 'publish' ? '승인 본문을 입력하고 게시 결과를 확인합니다.' : 'YouTube에서 댓글을 확인합니다.')
+    try {
+      const response = await fetch(endpoint + '/' + action, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(action === 'verify' ? { url: commentLink.trim() } : {}),
+      })
+      if (!response.ok) {
+        setMessage(response.status === 429 ? '오늘의 게시 한도에 도달했습니다.' :
+          '결과를 확인할 수 없습니다. 댓글 링크, 영상, 승인 본문과 공개 여부를 확인하세요.')
+        return
+      }
+      const data = await response.json()
+      setMessage(data.message ?? '댓글 작성 계정과 게시 시각을 게시 이력에 저장했습니다.')
+    } catch {
+      setMessage('서버 연결을 확인한 뒤 작업 이력을 다시 조회하세요.')
+    } finally {
+      saving.current = false
+      setChecking(false)
+      refresh()
+    }
+  }
+
   return (
     <>
       <p role="status">{message}</p>
@@ -126,9 +153,25 @@ export function ApprovalPanel({ videoId, title, draft }: Props) {
           </p>
           <blockquote>{job.body}</blockquote>
           {job.status === 'APPROVED' && job.profile === '유튜브 1' && (
+            <div className="publication-actions">
             <button disabled={checking} onClick={() => void prepareChrome()}>
               {checking ? '입력창 확인 중…' : 'Chrome에서 댓글 입력창 확인'}
             </button>
+            <button disabled={checking} onClick={() => void publication('publish')}>승인한 댓글 게시</button>
+            </div>
+          )}
+          {['APPROVED', 'CONFIRMATION_PENDING'].includes(job.status) && (
+            <details open={job.status === 'CONFIRMATION_PENDING'}>
+              <summary>이미 작성한 댓글 확인</summary>
+              <div className="editor-field">
+                <label>내 댓글 링크
+                  <input type="url" placeholder="YouTube 댓글의 작성 시각을 눌러 복사한 링크" value={commentLink}
+                    onChange={event => setCommentLink(event.target.value)} />
+                </label>
+                <button disabled={checking || (!commentLink.trim() && job.status !== 'CONFIRMATION_PENDING')}
+                  onClick={() => void publication('verify')}>게시 결과 확인</button>
+              </div>
+            </details>
           )}
           <h3>작업 이력</h3>
           <ol>

@@ -369,3 +369,17 @@ summary {
   border-radius: 12px;
   background: var(--panel);
 }
+
+.publication-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.publication-actions button:first-child {
+  background: var(--canvas);
+  color: var(--accent);
+  border-color: var(--line);
+}
+details .editor-field { margin-top: 12px; }
+details .editor-field label, details .editor-field input { display: block; width: 100%; }
+details .editor-field input { margin-top: 6px; }

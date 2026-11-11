@@ -1,12 +1,13 @@
 import { PromptSettings } from './features/analysis/PromptSettings'
 import { UsageDashboard } from './features/usage/UsageDashboard'
+import { PostedComments } from './features/comment/PostedComments'
 import { useEffect, useState } from 'react'
 import { ExampleWorkspace } from './features/video/ExampleWorkspace'
 import { YouTubeWorkspace } from './features/video/YouTubeWorkspace'
 import { useServerHealth } from './shared/useServerHealth'
 
 export default function App() {
-  const [workspace, setWorkspace] = useState<'video' | 'example' | 'prompt' | 'usage'>(
+  const [workspace, setWorkspace] = useState<'video' | 'example' | 'prompt' | 'usage' | 'posted'>(
     'video',
   )
   const [visitedPrompt, setVisitedPrompt] = useState(false)
@@ -17,6 +18,7 @@ export default function App() {
     example: '예시 작업실',
     prompt: 'AI 설정',
     usage: 'API 사용량',
+    posted: '댓글 게시 이력',
   }[workspace]
 
   useEffect(() => {
@@ -57,6 +59,9 @@ export default function App() {
           <button aria-current={workspace === 'usage' ? 'page' : undefined} onClick={() => setWorkspace('usage')}>
             API 사용량
           </button>
+          <button aria-current={workspace === 'posted' ? 'page' : undefined} onClick={() => setWorkspace('posted')}>
+            댓글 게시 이력
+          </button>
         </nav>
       </aside>
       <div className="content">
@@ -71,6 +76,7 @@ export default function App() {
           </div>
           <ExampleWorkspace active={example} />
           {workspace === 'usage' && <UsageDashboard />}
+          {workspace === 'posted' && <PostedComments />}
           {visitedPrompt && (
             <div hidden={workspace !== 'prompt'}>
               <PromptSettings />
