@@ -57,3 +57,6 @@ SELECT model_tier, instructions, version FROM public.comment_prompt WHERE id = 1
 -- 9. 최근 API 호출과 제공자가 반환한 토큰 수
 SELECT occurred_at AT TIME ZONE 'Asia/Seoul' AS time_kst, provider, operation, input_tokens, output_tokens
 FROM public.api_usage_event ORDER BY occurred_at DESC, id DESC LIMIT 100;
+
+-- 10. 영상별 AI 생성 상태와 저장된 초안
+SELECT video_id, stage, concern, evidence, draft FROM public.video_analysis ORDER BY video_id;
