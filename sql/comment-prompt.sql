@@ -22,3 +22,13 @@ SET instructions = REPLACE(instructions,
     version = version + 1
 WHERE id = 1 AND instructions LIKE '%그 장면에서 생긴 궁금증을 운명원에서 연애 사주를 본다면 묻고 싶은 점으로 연결하세요. 브랜드명은 한 번만 쓰고, 상담을 받은 후기나 적중률·효과를 지어내지 마세요. 누구에게나 붙일 수 있는 감탄사, 방문 권유, 매번 같은 마무리는 피하세요.%'
   AND LENGTH(instructions) + 85 <= 4000;
+
+-- Replace only the previous default wording, including in prompts with custom additions.
+UPDATE comment_prompt
+SET instructions = REPLACE(instructions,
+    '제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.',
+    '작성자가 확인한 경험은 운명원에서 연애 사주를 본 적이 있다는 것입니다. 영상에서 짚은 고민이 그때 본 일을 떠올리게 하는 흐름으로, 운명원에서 봤다는 사실을 1인칭으로 한 번 담으세요. 구체적인 상담 내용이나 효과는 작성자가 따로 제공한 경우에만 쓰세요.'),
+    version = version + 1
+WHERE id = 1 AND instructions LIKE '%제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.%'
+  AND LENGTH(instructions) - LENGTH('제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.')
+      + LENGTH('작성자가 확인한 경험은 운명원에서 연애 사주를 본 적이 있다는 것입니다. 영상에서 짚은 고민이 그때 본 일을 떠올리게 하는 흐름으로, 운명원에서 봤다는 사실을 1인칭으로 한 번 담으세요. 구체적인 상담 내용이나 효과는 작성자가 따로 제공한 경우에만 쓰세요.') <= 4000;
