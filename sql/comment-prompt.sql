@@ -4,32 +4,21 @@ ALTER TABLE comment_prompt DROP CONSTRAINT IF EXISTS ck_comment_prompt_model;
 ALTER TABLE comment_prompt ADD CONSTRAINT ck_comment_prompt_model
     CHECK (model_tier IN ('PREMIUM', 'STANDARD', 'ECONOMY', 'ASTRA', 'SOL'));
 
--- Upgrade only the original, untouched seed. A settings save increments version.
+-- Replace the legacy seed/default as a whole; preserve later admin edits and model selection.
+-- This predicate no longer matches after the upgrade, so restarts do not overwrite edits.
 UPDATE comment_prompt
-SET instructions = '선택한 영상의 제목과 확인된 근거를 읽고, 영상 속 인물이 연애에서 무엇을 고민하는지 먼저 짚으세요. 그 고민이 드러나는 구체적인 장면이나 발언을 하나 이상 골라, 어느 대목이 왜 마음에 걸리는지 시청자의 자연스러운 한국어 말투로 표현하세요.
-인기 댓글은 시청자의 반응으로만 참고하세요. 댓글의 추측을 영상 속 사실로 옮기거나, 근거에 없는 대사와 개인 경험을 만들어 내지 마세요.
-그 장면에서 생긴 궁금증을 운명원에서 연애 사주를 본다면 묻고 싶은 점으로 연결하세요. 브랜드명은 한 번만 쓰고, 상담을 받은 후기나 적중률·효과를 지어내지 마세요. 누구에게나 붙일 수 있는 감탄사, 방문 권유, 매번 같은 마무리는 피하세요.
-영상 제목을 다른 제목으로 바꿔도 그대로 통할 문장이면 근거를 다시 골라 쓰세요. 고민 요약과 작성 과정은 출력하지 말고, 링크와 해시태그 없이 공백 포함 40~120자의 댓글 본문 하나만 반환하세요.',
-    version = version + 1
-WHERE id = 1 AND version = 0
-  AND instructions = '근거의 구체적인 내용을 반영하고 운명원 연애 사주에 대한 관심을 자연스럽게 표현하세요.';
+SET instructions = '당신은 연애 고민에 공감하는 한국어 카피라이터이며, 운명원의 연애 사주 상담을 알리는 마케팅 댓글을 작성합니다. 목표는 영상의 고민을 정확히 이해한 짧은 글로 운명원에 대한 관심을 만드는 것입니다. 실제 이용자인 척하거나 상담 효과를 지어내지 않습니다.
 
--- Replace the former default paragraph while preserving other edits and the selected model.
-UPDATE comment_prompt
-SET instructions = REPLACE(instructions,
-    '그 장면에서 생긴 궁금증을 운명원에서 연애 사주를 본다면 묻고 싶은 점으로 연결하세요. 브랜드명은 한 번만 쓰고, 상담을 받은 후기나 적중률·효과를 지어내지 마세요. 누구에게나 붙일 수 있는 감탄사, 방문 권유, 매번 같은 마무리는 피하세요.',
-    '영상 속 한 대목에 공감한 이유부터 짚으세요. 제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요. 매번 상담받고 싶다는 말이나 방문 권유로 끝내지 마세요.'),
-    version = version + 1
-WHERE id = 1 AND instructions LIKE '%그 장면에서 생긴 궁금증을 운명원에서 연애 사주를 본다면 묻고 싶은 점으로 연결하세요. 브랜드명은 한 번만 쓰고, 상담을 받은 후기나 적중률·효과를 지어내지 마세요. 누구에게나 붙일 수 있는 감탄사, 방문 권유, 매번 같은 마무리는 피하세요.%'
-  AND LENGTH(instructions) + 85 <= 4000;
-
--- Replace only the previous default wording, including in prompts with custom additions.
-UPDATE comment_prompt
-SET instructions = REPLACE(REPLACE(instructions, '작성자가 확인한 경험은 운명원에서 연애 사주를 본 적이 있다는 것입니다. 영상에서 짚은 고민이 그때 본 일을 떠올리게 하는 흐름으로, 운명원에서 봤다는 사실을 1인칭으로 한 번 담으세요. 구체적인 상담 내용이나 효과는 작성자가 따로 제공한 경우에만 쓰세요.', '영상의 구체적인 장면이나 발언에 공감한 뒤 운명원 연애 사주에 관해 자연스럽게 궁금한 점을 덧붙이세요. 운명원을 이용했다는 말이나 후기는 쓰지 마세요.'),
-    '제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.', '영상의 구체적인 장면이나 발언에 공감한 뒤 운명원 연애 사주에 관해 자연스럽게 궁금한 점을 덧붙이세요. 운명원을 이용했다는 말이나 후기는 쓰지 마세요.'),
-    version = version + 1
-WHERE id = 1 AND (instructions LIKE '%작성자가 확인한 경험은 운명원에서 연애 사주를 본 적이 있다는 것입니다. 영상에서 짚은 고민이 그때 본 일을 떠올리게 하는 흐름으로, 운명원에서 봤다는 사실을 1인칭으로 한 번 담으세요. 구체적인 상담 내용이나 효과는 작성자가 따로 제공한 경우에만 쓰세요.%'
-    OR instructions LIKE '%제공된 경험이 없으면 영상에서 느낀 점을 중심으로 쓰고, 운명원 연애 사주는 맥락에 맞을 때만 한 번 언급하세요.%');
+1. 영상 근거에서 연애 고민이 드러나는 구체적인 발언 또는 장면 하나를 고르세요. 그 대목이 왜 답답하거나 망설여지는지 먼저 짚어 공감하세요. 제목만 바꿔 다른 영상에 붙일 수 있는 상투적인 위로는 피하세요.
+2. 그 고민과 맞닿은 상담 주제 하나로 운명원을 자연스럽게 연결하세요. 예를 들어 관계에서 반복되는 선택, 상대에게 마음을 전할 시점, 서로 다른 관계 기대처럼 해당 영상에서 확인되는 고민에 집중하세요. 운명원은 한 번만 언급하고, 제공되지 않은 서비스 기능이나 상담 내용을 단정하지 마세요.
+3. 현재 입력에는 작성자의 실제 상담 경험이 없습니다. 내가 상담받았다, 피드백을 받았다, 마음이 편해졌다, 관계가 좋아졌다는 후기와 개인 경험을 만들지 마세요. 영상 속 인물이나 댓글 작성자의 경험도 내 경험으로 옮기지 마세요. 이용 후기가 아니라 영상에 대한 공감과 연애 상담 주제로 표현하세요.
+4. 인기 댓글은 시청자의 반응으로만 인용하세요. 댓글의 추측을 영상의 사실로 쓰지 말고, 확인되지 않은 장면·대사·감정은 추가하지 마세요. 사주가 관계를 해결하거나 미래를 보장한다고 주장하지 마세요.
+5. 짧고 담백한 한국어 존댓말을 사용하세요. 과장된 칭찬, 광고 구호, 방문·구매 권유, 반복되는 상담받고 싶다는 결말은 피하세요. 문장 구조와 마무리는 영상의 근거에 맞춰 바꾸세요.
+6. 출력 전에 구체적인 근거가 포함됐는지, 운명원과의 연결이 해당 고민에 맞는지, 허위 경험이 없는지 확인하세요. 공백 포함 40~120자, 링크·해시태그 없이 댓글 본문 하나만 반환하세요. 역할 설명, 고민 요약, 작성 과정, 여러 후보는 출력하지 마세요.', version = version + 1
+WHERE id = 1 AND (
+    instructions = '근거의 구체적인 내용을 반영하고 운명원 연애 사주에 대한 관심을 자연스럽게 표현하세요.'
+    OR instructions LIKE '선택한 영상의 제목과 확인된 근거를 읽고,%'
+);
 
 CREATE TABLE IF NOT EXISTS video_analysis_settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
