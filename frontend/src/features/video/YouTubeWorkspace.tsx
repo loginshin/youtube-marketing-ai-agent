@@ -40,6 +40,9 @@ export function YouTubeWorkspace() {
           disabled={busy}
           onChange={(event) => setQuery(event.target.value)}
         />
+        <button disabled={busy || !query.trim()}>
+          {busy ? '조회 중…' : '영상 검색'}
+        </button>
         <div className="search-options">
           <label>정렬 <select disabled={busy} value={filters.order}
             onChange={event => changeFilters({ ...filters, order: event.target.value })}>
@@ -54,10 +57,15 @@ export function YouTubeWorkspace() {
             <option value="7">최근 7일</option>
             <option value="30">최근 30일</option>
           </select></label>
+          <div className="length-filter" role="group" aria-label="영상 길이">
+            {Object.entries({ all: '전체', short: '쇼츠 후보', long: '롱폼' }).map(([value, label]) => (
+            <button key={value} type="button" aria-pressed={format === value}
+                onClick={() => setFormat(value)}>{label}</button>
+            ))}
+          </div>
         </div>
-        <button disabled={busy || !query.trim()}>
-          {busy ? '조회 중…' : '영상 검색'}
-        </button>
+        {format === 'short' && <p className="search-hint">3분 이하 · 짧은 일반 영상도 포함됩니다.</p>}
+        {format === 'long' && <p className="search-hint">3분 초과 영상을 표시합니다.</p>}
       </form>
       {items.length > 0 && <p role="status">{message}</p>}
       <div className={selectedItem ? 'dashboard' : 'results-only'}>
@@ -66,14 +74,6 @@ export function YouTubeWorkspace() {
             <h2>영상 목록</h2>
             {items.length > 0 && <small>{visibleItems.length}개</small>}
           </div>
-          <div className="length-filter" role="group" aria-label="영상 길이">
-            {Object.entries({ all: '전체', short: '쇼츠 후보', long: '롱폼' }).map(([value, label]) => (
-              <button key={value} type="button" aria-pressed={format === value}
-                onClick={() => setFormat(value)}>{label}</button>
-            ))}
-          </div>
-          {format === 'short' && <p>3분 이하 · 짧은 일반 영상도 포함됩니다.</p>}
-          {format === 'long' && <p>3분 초과 영상을 표시합니다.</p>}
           {items.length > 0 && visibleItems.length === 0 && (
             <p role="status">현재 목록에 해당 길이의 영상이 없습니다.</p>
           )}
