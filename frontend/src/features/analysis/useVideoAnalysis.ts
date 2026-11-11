@@ -19,8 +19,9 @@ function savedEdits(id: string): Edits | null {
 
 export function useVideoAnalysis(video: VideoContext | null) {
   const [result, setResult] = useState<{ id: string; job: Snapshot; edits: Edits | null } | null>(null)
-  const [action, setAction] = useState<{ id: string; attempt?: string; evidence?: string } | null>(null)
+  const [action, setAction] = useState<{ id: string; attempt?: string; evidence?: string; analyzeVideo?: boolean } | null>(null)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   useEffect(() => {
     if (!video) return
     const controller = new AbortController()
@@ -31,7 +32,7 @@ export function useVideoAnalysis(video: VideoContext | null) {
       if (!video) return
       const retry = first && action?.id === video.id && action.attempt
       try {
-        const input = { title: video.title, description: video.description, comments: video.comments }
+        const input = { title: video.title, description: video.description, comments: video.comments, analyzeVideo: !!action?.analyzeVideo }
         const response = await fetch(retry ? url + '/retry' : url, {
           method: first ? 'POST' : 'GET',
           headers: first ? { 'Content-Type': 'application/json' } : undefined,
@@ -39,15 +40,20 @@ export function useVideoAnalysis(video: VideoContext | null) {
           signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
           cache: 'no-store',
         })
-        if (!response.ok) throw new Error()
+        if (!response.ok) {
+          const failure = await response.json().catch(() => null)
+          throw new Error(failure?.message || "분석 요청에 실패했습니다.")
+        }
         const job: Snapshot = await response.json()
         if (signal.aborted) return
+        setSubmitting(false)
         setError('')
         const edits = savedEdits(video.id)
         setResult({ id: video.id, job, edits: edits?.attempt === job.attempt || job.stage === 'FAILED' ? edits : null })
         if (job.stage === 'SUMMARY' || job.stage === 'DRAFT') timer = setTimeout(() => void load(false), 1100)
-      } catch {
-        if (!signal.aborted) setError('작업 상태를 확인하지 못했습니다. 다시 연결하세요.')
+      } catch (error) {
+        if (!signal.aborted) setSubmitting(false)
+        if (!signal.aborted) setError(error instanceof Error ? error.message : '작업 상태를 확인하지 못했습니다. 다시 연결하세요.')
       }
     }
     void load(true)
@@ -63,7 +69,7 @@ export function useVideoAnalysis(video: VideoContext | null) {
     catch { setError('브라우저에 수정본을 저장할 공간이 부족합니다.') }
     setResult({ ...current, edits })
   }
-  const busy = !job || job.stage === 'SUMMARY' || job.stage === 'DRAFT'
+  const busy = submitting || !job || job.stage === 'SUMMARY' || job.stage === 'DRAFT'
   const evidence = current?.edits?.evidence ?? job?.evidence ?? ''
   return {
     busy, concern: job?.concern ?? '', evidence, draft: current?.edits?.draft ?? job?.draft ?? '',
@@ -72,9 +78,17 @@ export function useVideoAnalysis(video: VideoContext | null) {
     retrySummary: job?.stage === 'FAILED' && !evidence.trim(),
     regenerate: () => {
       if (video && job && !busy) {
-        setResult(null)
+        setSubmitting(true)
+        setSubmitting(false)
         setError('')
         setAction({ id: video.id, attempt: job.attempt, evidence })
+      }
+    },
+    analyze: (analyzeVideo: boolean) => {
+      if (video && job && !busy) {
+        setSubmitting(true)
+        setError("")
+        setAction({ id: video.id, attempt: job.attempt, evidence: "", analyzeVideo })
       }
     },
     edit,

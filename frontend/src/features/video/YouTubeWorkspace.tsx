@@ -109,6 +109,11 @@ function SelectedVideo({ detail }: { detail: Detail }) {
     <>
       <section>
         <h2>분석과 초안</h2>
+          <div className="settings-actions">
+            <button disabled={analysis.busy} onClick={() => analysis.analyze(false)}>콘텐츠 분석</button>
+            <button disabled={analysis.busy} onClick={() => analysis.analyze(true)}>영상 분석</button>
+          </div>
+          <p>콘텐츠 분석은 제목·설명·공개 댓글을, 영상 분석은 화면·음성을 사용합니다.</p>
         <a
           href={`https://www.youtube.com/watch?v=${encodeURIComponent(video.id)}`}
           target="_blank"

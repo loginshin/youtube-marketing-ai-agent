@@ -64,7 +64,7 @@ export function DraftEditor({
         <p>{video.concern}</p>
       </header>
       <div className="editor-field">
-        <label htmlFor={evidenceId}>확인한 영상 근거</label>
+        <label htmlFor={evidenceId}>분석 근거와 출처</label>
         <textarea
           id={evidenceId}
           value={evidence}
@@ -75,7 +75,7 @@ export function DraftEditor({
         />
         <p>
           {actualVideo
-            ? '직접 확인한 영상 근거를 입력하면 AI 초안을 생성할 수 있습니다. 자막은 자동 수집하지 않습니다.'
+            ? '직접 분석 근거와 출처를 입력하면 AI 초안을 생성할 수 있습니다. 자막은 자동 수집하지 않습니다.'
             : '예시 영상의 근거를 사용해 실제 AI 초안을 생성합니다.'}
         </p>
         <button

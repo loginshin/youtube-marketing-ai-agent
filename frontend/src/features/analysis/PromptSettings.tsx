@@ -6,9 +6,18 @@ type Settings = {
   modelTier: string
   models: { tier: string; label: string; modelId: string }[]
 }
-const endpoint = '/api/analysis/draft/prompt'
+
 
 export function PromptSettings() {
+  return (
+    <>
+      <SettingsEditor endpoint="/api/analysis/draft/prompt" video={false} />
+      <SettingsEditor endpoint="/api/analysis/video/settings" video />
+    </>
+  )
+}
+
+function SettingsEditor({ endpoint, video }: { endpoint: string; video: boolean }) {
   const [saved, setSaved] = useState<Settings | null>(null)
   const [text, setText] = useState('')
   const [modelTier, setModelTier] = useState('')
@@ -43,7 +52,7 @@ export function PromptSettings() {
     }
     void read()
     return () => controller.abort()
-  }, [reload])
+  }, [reload, endpoint])
 
   async function save() {
     if (!saved || busy) return
@@ -66,7 +75,7 @@ export function PromptSettings() {
       setSaved(value)
       setText(value.instructions)
       setModelTier(value.modelTier)
-      setMessage('저장했습니다. 다음 영상 분석과 초안 생성부터 적용됩니다.')
+      setMessage('저장했습니다. 다음 분석 요청부터 적용됩니다.')
     } catch {
       setMessage('저장 결과를 확인하지 못했습니다. 다시 시도해주세요.')
     } finally {
@@ -76,10 +85,12 @@ export function PromptSettings() {
 
   return (
     <section className="prompt-settings">
+      <h2>{video ? "영상 분석 · Gemini" : "콘텐츠 분석과 댓글 초안 · OpenAI"}</h2>
+      {video && <p>공개 YouTube 영상의 화면·음성을 분석합니다. backend/.env에 GEMINI_API_KEY를 설정한 뒤 서버를 재시작하세요.</p>}
       <div className="editor-field">
-        <label htmlFor="ai-model">OpenAI 모델</label>
+        <label htmlFor={video ? "video-ai-model" : "ai-model"}>{video ? "Gemini 모델" : "OpenAI 모델"}</label>
         <select
-          id="ai-model"
+          id={video ? "video-ai-model" : "ai-model"}
           value={modelTier}
           disabled={busy || !saved}
           onChange={(event) => {
@@ -93,13 +104,13 @@ export function PromptSettings() {
         </select>
       </div>
       <div className="editor-field">
-        <label htmlFor="prompt-instructions">댓글 초안 작성 지침</label>
+        <label htmlFor={video ? "video-instructions" : "prompt-instructions"}>{video ? "영상 분석 지침" : "댓글 초안 작성 지침"}</label>
         <p>
-          말투, 강조할 내용, 브랜드 표현을 입력하세요. 영상 근거와 40~120자 작성
-          기준은 별도로 적용됩니다.
+          {video ? "분석할 고민과 주목할 장면을 지정하세요. 결과에 고민 요약과 시점별 근거가 포함됩니다."
+            : "말투, 강조할 내용, 브랜드 표현을 입력하세요. 근거와 40~120자 작성 기준이 함께 적용됩니다."}
         </p>
         <textarea
-          id="prompt-instructions"
+          id={video ? "video-instructions" : "prompt-instructions"}
           rows={8}
           maxLength={4000}
           value={text}
