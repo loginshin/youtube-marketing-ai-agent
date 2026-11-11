@@ -159,15 +159,15 @@ export type CommentJobStatus =
 
 ```bash
 git status
-git check-ignore .env.local
+git check-ignore backend/.env
 ```
 
-`.env.local` 무시 여부가 확인되지 않으면 `.gitignore`에 아래를 추가한다.
+`backend/.env` 무시 여부가 확인되지 않으면 `.gitignore`에 아래를 추가한다.
 
 ```gitignore
 .env
 .env.*
-!.env.example
+
 ```
 
 `package-lock.json`은 버전 재현성을 위해 커밋한다. 공개 저장소에 API 키·Chrome 쿠키·프로필 파일·실패 캡처를 올리지 않는다.

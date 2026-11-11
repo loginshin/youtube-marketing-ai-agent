@@ -49,11 +49,12 @@ Vite가 표시한 주소를 열면 API 키 없이 서버 연결 상태를 확인
 - `backend/ai`: OpenAI Responses API 호출 클라이언트 (DB 의존 없음)
 - `sql/`: 초기 스키마와 [DBeaver 조회 쿼리](sql/inspect-postgres.sql). JPA 엔티티와 저장소는 API 모듈에 포함됩니다.
 
-`backend/.env.example`을 `backend/.env`로 복사한 뒤 `OPENAI_API_KEY=` 뒤에 키를 입력합니다. 따옴표 없이 작성하고 서버를 재시작하세요. `YOUTUBE_API_KEY`는 YouTube Data API v3를 활성화한 프로젝트의 키입니다. OS 환경 변수는 `.env`보다 우선합니다. 실제 `.env`는 Git에서 제외됩니다.
+`backend/.env` 파일을 열고 (없으면 생성한 뒤) `OPENAI_API_KEY=` 뒤에 키를 입력합니다. 따옴표 없이 작성하고 서버를 재시작하세요. `YOUTUBE_API_KEY`는 YouTube Data API v3를 활성화한 프로젝트의 키입니다. OS 환경 변수는 `.env`보다 우선합니다. 실제 `.env`는 Git에서 제외됩니다. 모든 API 키는 `backend/.env`에 모아 입력합니다. 영상 분석에는 `GEMINI_API_KEY=`를 추가하세요.
 
 ```powershell
 cd backend
-Copy-Item .env.example .env # 처음 한 번만 실행; 기존 .env가 있으면 덮어쓰지 마세요
+if (!(Test-Path .env)) { New-Item .env -ItemType File }
+notepad .env
 .\gradlew.bat :api:bootRun
 ```
 
