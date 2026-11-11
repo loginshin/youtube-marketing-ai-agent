@@ -1,6 +1,7 @@
 package com.marketing.agent.video.infrastructure;
 
 import java.net.http.HttpClient;
+import com.marketing.agent.usage.ApiUsageRecorder;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +16,18 @@ public class YouTubeClient {
     private final RestClient client;
     private final String key;
 
-    public YouTubeClient(@Value("${agent.youtube.api-key:}") String key) {
+    public YouTubeClient(@Value("${agent.youtube.api-key:}") String key, ApiUsageRecorder usage) {
         this.key = key;
         var factory = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10)).build());
         factory.setReadTimeout(Duration.ofSeconds(20));
         client = RestClient.builder().baseUrl("https://www.googleapis.com/youtube/v3")
-                .requestFactory(factory).build();
+                .requestFactory(factory)
+                .requestInterceptor((request, body, execution) -> {
+                    String path = request.getURI().getPath();
+                    usage.recordYouTube(path.substring(path.lastIndexOf('/') + 1) + ".list");
+                    return execution.execute(request, body);
+                }).build();
     }
 
     public SearchResponse search(String query, String pageToken) {

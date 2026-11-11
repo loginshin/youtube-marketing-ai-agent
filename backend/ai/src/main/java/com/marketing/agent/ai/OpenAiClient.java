@@ -4,6 +4,8 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,11 @@ import org.springframework.web.client.RestClient;
 public class OpenAiClient {
     private final RestClient client;
     private final String apiKey;
+    private final ApplicationEventPublisher events;
 
-    public OpenAiClient(@Value("${agent.ai.api-key:}") String apiKey) {
+    public OpenAiClient(@Value("${agent.ai.api-key:}") String apiKey, ApplicationEventPublisher events) {
         this.apiKey = apiKey;
+        this.events = events;
         var factory = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10)).build());
         factory.setReadTimeout(Duration.ofSeconds(60));
@@ -28,12 +32,19 @@ public class OpenAiClient {
         if (apiKey.isBlank()) {
             throw new IllegalStateException("backend/.env에 OPENAI_API_KEY를 설정하세요.");
         }
-        Response response = client.post().uri("/responses")
+        Response response = null;
+        try {
+            response = client.post().uri("/responses")
                 .headers(headers -> headers.setBearerAuth(apiKey))
                 .body(Map.of("model", model.modelId(), "instructions", instructions,
                         "input", input, "store", false, "max_output_tokens", 1000,
                         "reasoning", Map.of("effort", model.reasoningEffort())))
-                .retrieve().body(Response.class);
+                    .retrieve().body(Response.class);
+        } finally {
+            Usage usage = response == null ? null : response.usage();
+            events.publishEvent(new OpenAiUsage(model.modelId(),
+                    usage == null ? null : usage.inputTokens(), usage == null ? null : usage.outputTokens()));
+        }
         if (response == null || !"completed".equals(response.status()) || response.output() == null) {
             throw new IllegalStateException("AI 응답이 완료되지 않았습니다.");
         }
@@ -50,7 +61,8 @@ public class OpenAiClient {
         return text.toString();
     }
 
-    public record Response(String status, List<Output> output) {}
+    public record Usage(@JsonProperty("input_tokens") Long inputTokens, @JsonProperty("output_tokens") Long outputTokens) {}
+    public record Response(String status, List<Output> output, Usage usage) {}
     public record Output(List<Content> content) {}
     public record Content(String type, String text) {}
 }

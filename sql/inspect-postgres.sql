@@ -53,3 +53,7 @@ SELECT id FROM public.approval_guard ORDER BY id;
 
 -- 8. 다음 댓글 초안 생성에 적용되는 작성 지침과 수정 버전
 SELECT model_tier, instructions, version FROM public.comment_prompt WHERE id = 1;
+
+-- 9. 최근 API 호출과 제공자가 반환한 토큰 수
+SELECT occurred_at AT TIME ZONE 'Asia/Seoul' AS time_kst, provider, operation, input_tokens, output_tokens
+FROM public.api_usage_event ORDER BY occurred_at DESC, id DESC LIMIT 100;
