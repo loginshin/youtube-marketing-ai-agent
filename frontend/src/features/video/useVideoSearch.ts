@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Video } from './types'
 
-type Summary = Pick<Video, 'id' | 'title' | 'channel' | 'date' | 'thumbnailUrl'>
+type Summary = Pick<Video, 'id' | 'title' | 'channel' | 'date' | 'thumbnailUrl' | 'durationSeconds'>
 const koreanDate = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   dateStyle: 'long',
@@ -15,6 +15,7 @@ type Detail = Summary & {
 export function useVideoSearch() {
   const [query, setQuery] = useState('연애')
   const [items, setItems] = useState<Video[]>([])
+  const [nextPage, setNextPage] = useState<{ token: string; query: string } | null>(null)
   const [detail, setDetail] = useState<Detail | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(
@@ -23,13 +24,20 @@ export function useVideoSearch() {
   const request = useRef<AbortController | null>(null)
   useEffect(() => () => request.current?.abort(), [])
 
-  async function load(id?: string) {
+  async function load(id?: string, append = false) {
     if (request.current) return
+    if (append && !nextPage) return
+    const searchQuery = append && nextPage ? nextPage.query : query.trim()
+    const params = new URLSearchParams({ query: searchQuery })
+    if (append && nextPage) params.set('pageToken', nextPage.token)
     const controller = new AbortController()
     request.current = controller
     setBusy(true)
-    setDetail(null)
-    if (!id) setItems([])
+    if (!append) setDetail(null)
+    if (!id && !append) {
+      setItems([])
+      setNextPage(null)
+    }
     setMessage(
       id
         ? '영상 설명과 댓글을 불러오는 중입니다.'
@@ -39,7 +47,7 @@ export function useVideoSearch() {
       const response = await fetch(
         id
           ? `/api/videos/${encodeURIComponent(id)}`
-          : `/api/videos?query=${encodeURIComponent(query.trim())}`,
+          : `/api/videos?${params}`,
         {
           signal: AbortSignal.any([
             controller.signal,
@@ -61,20 +69,24 @@ export function useVideoSearch() {
         setMessage('영상 설명과 공개 댓글을 불러왔습니다.')
       } else {
         const results = data as Summary[]
-        setItems(
-          results.map((item) => ({
-            ...item,
-            date: koreanDate.format(new Date(item.date)),
-            art: '▶',
-            color: '#365862',
-            concern: '',
-            evidence: '',
-            draft: '',
-          })),
-        )
+        const videos = results.map((item) => ({
+          ...item,
+          date: koreanDate.format(new Date(item.date)),
+          art: '▶',
+          color: '#365862',
+          concern: '',
+          evidence: '',
+          draft: '',
+        }))
+        setItems((previous) => {
+          const combined = append ? [...previous, ...videos] : videos
+          return [...new Map(combined.map((video) => [video.id, video])).values()]
+        })
+        const token = response.headers.get('X-Next-Page-Token')
+        setNextPage(token ? { token, query: searchQuery } : null)
         setMessage(
           results.length
-            ? `${results.length}개 영상입니다. 분석할 영상을 선택하세요.`
+            ? '분석할 영상을 선택하세요.'
             : '조회된 영상이 없습니다. 다른 검색어로 시도하세요.',
         )
       }
@@ -91,5 +103,7 @@ export function useVideoSearch() {
     }
   }
 
-  return { query, setQuery, items, detail, busy, message, load }
+  return { query, setQuery, items, detail, busy, message, load,
+    hasMore: nextPage !== null && nextPage.query === query.trim(),
+    loadMore: () => load(undefined, true) }
 }

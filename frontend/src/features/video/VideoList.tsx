@@ -42,6 +42,9 @@ export function VideoList({
             <strong>{v.title}</strong>
             <small>
               {v.channel} · {v.date}
+              {v.durationSeconds != null && (
+                <> · {Math.floor(v.durationSeconds / 60)}:{String(v.durationSeconds % 60).padStart(2, '0')}</>
+              )}
             </small>
           </span>
         </button>

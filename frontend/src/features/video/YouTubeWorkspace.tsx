@@ -8,11 +8,17 @@ import type { Video } from './types'
 import { useVideoSearch } from './useVideoSearch'
 
 export function YouTubeWorkspace() {
-  const { query, setQuery, items, detail, busy, message, load } =
+  const { query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
     useVideoSearch()
+  const [format, setFormat] = useState('all')
+  const visibleItems = items.filter(({ durationSeconds }) => {
+    if (format === 'all') return true
+    if (durationSeconds == null) return false
+    return format === 'short' ? durationSeconds <= 180 : durationSeconds > 180
+  })
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [evidenceById, setEvidenceById] = useState<Record<string, string>>({})
-  const video: Video | null = detail
+  const video: Video | null = detail && visibleItems.some((item) => item.id === detail.id)
     ? {
         ...detail,
         art: '▶',
@@ -48,6 +54,16 @@ export function YouTubeWorkspace() {
       <div className={video ? 'dashboard' : 'results-only'}>
         <section>
           <h2>영상 목록</h2>
+          <label htmlFor="video-format">영상 길이</label>
+          <select id="video-format" value={format} onChange={(event) => setFormat(event.target.value)}>
+            <option value="all">전체</option>
+            <option value="short">쇼츠 후보 · 3분 이하</option>
+            <option value="long">롱폼 · 3분 초과</option>
+          </select>
+          {format === 'short' && <p>3분 이하의 일반 영상도 포함됩니다.</p>}
+          {items.length > 0 && visibleItems.length === 0 && (
+            <p role="status">현재 목록에 해당 길이의 영상이 없습니다.</p>
+          )}
           {items.length === 0 && (
             <div className="empty-result">
               <span aria-hidden="true">▷</span>
@@ -55,11 +71,16 @@ export function YouTubeWorkspace() {
             </div>
           )}
           <VideoList
-            items={items}
+            items={visibleItems}
             selected={detail?.id ?? ''}
             disabled={busy}
             onSelect={(id) => void load(id)}
           />
+          {hasMore && (
+            <button type="button" disabled={busy} onClick={() => void loadMore()}>
+              다음 결과 불러오기
+            </button>
+          )}
         </section>
         <section hidden={!video}>
           <h2>분석과 초안</h2>
