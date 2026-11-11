@@ -1,5 +1,5 @@
 import { ApprovalPanel } from '../comment/ApprovalPanel'
-import { VideoSummaryPanel } from '../analysis/VideoSummaryPanel'
+import { useVideoAnalysis } from '../analysis/useVideoAnalysis'
 import { useState } from 'react'
 import { DraftEditor } from '../analysis/DraftEditor'
 import { VideoList } from './VideoList'
@@ -8,25 +8,24 @@ import type { Video } from './types'
 import { useVideoSearch } from './useVideoSearch'
 
 export function YouTubeWorkspace() {
+  const { entries, analyze, edit } = useVideoAnalysis()
   const { query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
-    useVideoSearch()
+    useVideoSearch(analyze)
   const [format, setFormat] = useState('all')
   const visibleItems = items.filter(({ durationSeconds }) => {
     if (format === 'all') return true
     if (durationSeconds == null) return false
     return format === 'short' ? durationSeconds <= 180 : durationSeconds > 180
   })
-  const [drafts, setDrafts] = useState<Record<string, string>>({})
-  const [evidenceById, setEvidenceById] = useState<Record<string, string>>({})
+  const analysis = detail && entries[detail.id]
   const video: Video | null = detail && visibleItems.some((item) => item.id === detail.id)
     ? {
         ...detail,
         art: '▶',
         color: '#365862',
-        concern:
-          '설명과 댓글은 참고 자료입니다. 실제 영상에서 확인한 발언·장면을 근거로 입력해주세요.',
-        evidence: '',
-        draft: '',
+        concern: analysis?.concern ?? '',
+        evidence: analysis?.evidence ?? '',
+        draft: analysis?.draft ?? '',
       }
     : null
 
@@ -116,28 +115,22 @@ export function YouTubeWorkspace() {
                   <p>조회 가능한 댓글이 없습니다.</p>
                 )}
               </details>
-              <VideoSummaryPanel
-                key={video.id}
-                title={detail.title}
-                description={detail.description}
-                comments={detail.comments}
-              />
-              <DraftEditor
-                key={video.id}
-                video={video}
-                evidence={evidenceById[video.id] ?? video.evidence}
-                onEvidenceChange={(text) =>
-                  setEvidenceById((previous) => ({
-                    ...previous,
-                    [video.id]: text,
-                  }))
-                }
-                draft={drafts[video.id] ?? ''}
-                onEdit={(text) =>
-                  setDrafts((previous) => ({ ...previous, [video.id]: text }))
-                }
-                actualVideo
-              />
+              <p role="status">{analysis?.message}</p>
+              {analysis?.summaryFailed && (
+                <button onClick={() => void analyze(detail)}>영상 분석 다시 시도</button>
+              )}
+              {analysis?.busy && analysis.concern && <p>{analysis.concern}</p>}
+              {analysis && !analysis.busy && (
+                <DraftEditor
+                  key={video.id}
+                  video={video}
+                  evidence={video.evidence}
+                  onEvidenceChange={(text) => edit(video.id, { evidence: text })}
+                  draft={video.draft}
+                  onEdit={(text) => edit(video.id, { draft: text })}
+                  actualVideo
+                />
+              )}
             </>
           ) : (
             <p>검색 후 영상을 선택해주세요.</p>
@@ -150,7 +143,7 @@ export function YouTubeWorkspace() {
               key={video.id}
               videoId={video.id}
               title={video.title}
-              draft={drafts[video.id] ?? ''}
+              draft={video.draft}
             />
           ) : (
             <p>영상을 선택하면 승인 본문과 이력을 확인할 수 있습니다.</p>

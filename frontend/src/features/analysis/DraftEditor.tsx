@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { generateDraft } from './analysisApi'
 import type { Video } from '../video/examples'
 
 export function DraftEditor({
@@ -35,19 +36,9 @@ export function DraftEditor({
     setMessage('AI 초안을 생성하고 있습니다.')
     const timeout = window.setTimeout(() => controller.abort(), 70000)
     try {
-      const response = await fetch('/api/analysis/draft', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: video.title, evidence: evidence.trim() }),
-        signal: controller.signal,
-      })
-      const data = await response.json()
-      if (!response.ok)
-        throw new Error(data.message ?? 'AI 요청에 실패했습니다.')
-      if (typeof data.draft !== 'string')
-        throw new Error('AI 응답 형식이 올바르지 않습니다.')
+      const draft = await generateDraft(video.title, evidence.trim(), controller.signal)
       if (controller.signal.aborted) return
-      onEdit(data.draft)
+      onEdit(draft)
       setMessage('AI 초안이 생성되었습니다. 근거와 본문을 검토해주세요.')
     } catch (error) {
       setMessage(

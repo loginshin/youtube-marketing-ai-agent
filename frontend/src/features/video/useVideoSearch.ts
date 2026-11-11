@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Video } from './types'
+import type { VideoContext } from '../analysis/analysisApi'
 
 type Summary = Pick<Video, 'id' | 'title' | 'channel' | 'date' | 'thumbnailUrl' | 'durationSeconds'>
 const koreanDate = new Intl.DateTimeFormat('ko-KR', {
@@ -12,7 +13,7 @@ type Detail = Summary & {
   warning: string | null
 }
 
-export function useVideoSearch() {
+export function useVideoSearch(onSelect: (video: VideoContext) => void) {
   const [query, setQuery] = useState('연애')
   const [items, setItems] = useState<Video[]>([])
   const [nextPage, setNextPage] = useState<{ token: string; query: string } | null>(null)
@@ -65,7 +66,9 @@ export function useVideoSearch() {
         )
       if (controller.signal.aborted) return
       if (id) {
-        setDetail(data as Detail)
+        const selected = data as Detail
+        setDetail(selected)
+        onSelect(selected)
         setMessage('영상 설명과 공개 댓글을 불러왔습니다.')
       } else {
         const results = data as Summary[]
