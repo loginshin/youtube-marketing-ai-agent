@@ -8,16 +8,16 @@ import type { Video } from './types'
 import { useVideoSearch } from './useVideoSearch'
 
 export function YouTubeWorkspace() {
-  const { entries, analyze, edit } = useVideoAnalysis()
+
   const { query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
-    useVideoSearch(analyze)
+    useVideoSearch()
   const [format, setFormat] = useState('all')
   const visibleItems = items.filter(({ durationSeconds }) => {
     if (format === 'all') return true
     if (durationSeconds == null) return false
     return format === 'short' ? durationSeconds <= 180 : durationSeconds > 180
   })
-  const analysis = detail && entries[detail.id]
+  const analysis = useVideoAnalysis(detail)
   const video: Video | null = detail && visibleItems.some((item) => item.id === detail.id)
     ? {
         ...detail,
@@ -116,8 +116,9 @@ export function YouTubeWorkspace() {
                 )}
               </details>
               <p role="status">{analysis?.message}</p>
-              {analysis?.summaryFailed && (
-                <button onClick={() => void analyze(detail)}>영상 분석 다시 시도</button>
+              {analysis.reconnect && <button onClick={analysis.reconnect}>작업 다시 연결</button>}
+              {analysis.retrySummary && (
+                <button onClick={analysis.regenerate}>영상 분석 다시 시도</button>
               )}
               {analysis?.busy && analysis.concern && <p>{analysis.concern}</p>}
               {analysis && !analysis.busy && (
@@ -125,9 +126,10 @@ export function YouTubeWorkspace() {
                   key={video.id}
                   video={video}
                   evidence={video.evidence}
-                  onEvidenceChange={(text) => edit(video.id, { evidence: text })}
+                  onEvidenceChange={(text) => analysis.edit({ evidence: text })}
                   draft={video.draft}
-                  onEdit={(text) => edit(video.id, { draft: text })}
+                  onEdit={(text) => analysis.edit({ draft: text })}
+                  onGenerate={analysis.regenerate}
                   actualVideo
                 />
               )}

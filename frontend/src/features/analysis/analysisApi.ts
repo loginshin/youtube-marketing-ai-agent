@@ -5,10 +5,6 @@ export type VideoContext = {
   comments: string[]
 }
 
-type Summary =
-  | { status: 'insufficient' }
-  | { status: 'ready'; summary: string; source: string; quote: string }
-
 async function request(path: string, body: object, signal: AbortSignal) {
   const response = await fetch('/api/analysis/' + path, {
     method: 'POST',
@@ -19,12 +15,6 @@ async function request(path: string, body: object, signal: AbortSignal) {
   const data = await response.json().catch(() => null)
   if (!response.ok || !data) throw new Error(data?.message || 'AI 요청에 실패했습니다.')
   return data
-}
-
-export async function summarizeVideo({ title, description, comments }: VideoContext, signal: AbortSignal): Promise<Summary> {
-  const result = await request('summary', { title, description, comments }, signal)
-  if (result.status === 'insufficient' || (result.status === 'ready' && result.quote && result.source && result.summary)) return result
-  throw new Error('영상 요약 형식을 확인할 수 없습니다.')
 }
 
 export async function generateDraft(title: string, evidence: string, signal: AbortSignal): Promise<string> {

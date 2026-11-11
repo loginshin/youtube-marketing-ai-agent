@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Video } from './types'
-import type { VideoContext } from '../analysis/analysisApi'
+
 
 type Summary = Pick<Video, 'id' | 'title' | 'channel' | 'date' | 'thumbnailUrl' | 'durationSeconds'>
 const koreanDate = new Intl.DateTimeFormat('ko-KR', {
@@ -13,14 +13,22 @@ type Detail = Summary & {
   warning: string | null
 }
 
-export function useVideoSearch(onSelect: (video: VideoContext) => void) {
-  const [query, setQuery] = useState('연애')
-  const [items, setItems] = useState<Video[]>([])
+type Workspace = { query: string; items: Video[]; detail: Detail }
+
+function restore(): Workspace | null {
+  try { return JSON.parse(sessionStorage.getItem('clipdesk.workspace') ?? 'null') }
+  catch { return null }
+}
+
+export function useVideoSearch() {
+  const [restored] = useState(restore)
+  const [query, setQuery] = useState(restored?.query ?? '연애')
+  const [items, setItems] = useState<Video[]>(restored?.items ?? [])
   const [nextPage, setNextPage] = useState<{ token: string; query: string } | null>(null)
-  const [detail, setDetail] = useState<Detail | null>(null)
+  const [detail, setDetail] = useState<Detail | null>(restored?.detail ?? null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(
-    '검색 버튼을 눌러 최신 영상을 불러오세요.',
+    restored ? '이전 영상 작업을 복원했습니다.' : '검색 버튼을 눌러 최신 영상을 불러오세요.',
   )
   const request = useRef<AbortController | null>(null)
   useEffect(() => () => request.current?.abort(), [])
@@ -38,6 +46,7 @@ export function useVideoSearch(onSelect: (video: VideoContext) => void) {
     if (!id && !append) {
       setItems([])
       setNextPage(null)
+      sessionStorage.removeItem('clipdesk.workspace')
     }
     setMessage(
       id
@@ -68,7 +77,8 @@ export function useVideoSearch(onSelect: (video: VideoContext) => void) {
       if (id) {
         const selected = data as Detail
         setDetail(selected)
-        onSelect(selected)
+        try { sessionStorage.setItem('clipdesk.workspace', JSON.stringify({ query, items, detail: selected })) }
+        catch { setMessage('브라우저에 마지막 영상 위치를 저장하지 못했습니다.'); return }
         setMessage('영상 설명과 공개 댓글을 불러왔습니다.')
       } else {
         const results = data as Summary[]

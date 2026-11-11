@@ -9,12 +9,14 @@ export function DraftEditor({
   evidence,
   onEvidenceChange,
   actualVideo = false,
+  onGenerate,
 }: {
   video: Video
   draft: string
   onEdit: (text: string) => void
   evidence: string
   onEvidenceChange: (text: string) => void
+  onGenerate?: () => void
   actualVideo?: boolean
 }) {
   const editorId = useId()
@@ -78,7 +80,7 @@ export function DraftEditor({
         </p>
         <button
           disabled={pending || !evidence.trim()}
-          onClick={() => void generate()}
+          onClick={onGenerate ?? (() => void generate())}
         >
           {pending ? '생성 중…' : 'AI 초안 생성·재생성'}
         </button>
