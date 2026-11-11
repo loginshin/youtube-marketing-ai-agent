@@ -1,11 +1,12 @@
 import { PromptSettings } from './features/analysis/PromptSettings'
+import { UsageDashboard } from './features/usage/UsageDashboard'
 import { useState } from 'react'
 import { ExampleWorkspace } from './features/video/ExampleWorkspace'
 import { YouTubeWorkspace } from './features/video/YouTubeWorkspace'
 import { useServerHealth } from './shared/useServerHealth'
 
 export default function App() {
-  const [workspace, setWorkspace] = useState<'video' | 'example' | 'prompt'>(
+  const [workspace, setWorkspace] = useState<'video' | 'example' | 'prompt' | 'usage'>(
     'video',
   )
   const [visitedPrompt, setVisitedPrompt] = useState(false)
@@ -15,6 +16,7 @@ export default function App() {
     video: '영상 작업실',
     example: '예시 작업실',
     prompt: 'AI 설정',
+    usage: 'API 사용량',
   }[workspace]
 
   return (
@@ -46,6 +48,9 @@ export default function App() {
           >
             AI 설정
           </button>
+          <button aria-current={workspace === 'usage' ? 'page' : undefined} onClick={() => setWorkspace('usage')}>
+            API 사용량
+          </button>
         </nav>
       </aside>
       <div className="content">
@@ -59,6 +64,7 @@ export default function App() {
             <YouTubeWorkspace />
           </div>
           <ExampleWorkspace active={example} />
+          {workspace === 'usage' && <UsageDashboard />}
           {visitedPrompt && (
             <div hidden={workspace !== 'prompt'}>
               <PromptSettings />

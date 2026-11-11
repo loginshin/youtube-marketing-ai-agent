@@ -1,0 +1,9 @@
+.usage-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.usage-controls select { margin-inline-start: 8px; }
+.usage section { margin-top: 16px; padding: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+.usage-total { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.usage table { border-collapse: collapse; width: 100%; margin-top: 14px; font-variant-numeric: tabular-nums; }
+.usage th, .usage td { padding: 10px 4px; text-align: right; border-top: 1px solid var(--line); }
+.usage th:first-child { text-align: left; }
+.usage thead { color: var(--muted); font-size: 0.85rem; }
+
