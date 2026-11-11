@@ -1,5 +1,6 @@
 import { ApprovalPanel } from '../comment/ApprovalPanel'
 import { useVideoAnalysis } from '../analysis/useVideoAnalysis'
+import { AnalysisHistory } from '../analysis/AnalysisHistory'
 import { useState } from 'react'
 import { DraftEditor } from '../analysis/DraftEditor'
 import { VideoList } from './VideoList'
@@ -133,6 +134,7 @@ export function YouTubeWorkspace() {
                   actualVideo
                 />
               )}
+              {!analysis.busy && <AnalysisHistory key={video.id} videoId={video.id} />}
             </>
           ) : (
             <p>검색 후 영상을 선택해주세요.</p>
