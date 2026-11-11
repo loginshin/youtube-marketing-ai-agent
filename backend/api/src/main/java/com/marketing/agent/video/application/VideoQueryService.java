@@ -18,7 +18,7 @@ public class VideoQueryService {
         }
         return youtube.search(query.strip()).stream().map(item -> new VideoSummary(
                 item.id().videoId(), item.snippet().title(), item.snippet().channelTitle(),
-                item.snippet().publishedAt())).toList();
+                item.snippet().publishedAt(), item.snippet().thumbnailUrl())).toList();
     }
 
     public VideoDetail detail(String id) {
@@ -32,7 +32,7 @@ public class VideoQueryService {
                 video.snippet().publishedAt(), video.snippet().description(), comments.texts(), comments.warning());
     }
 
-    public record VideoSummary(String id, String title, String channel, String date) {}
+    public record VideoSummary(String id, String title, String channel, String date, String thumbnailUrl) {}
     public record VideoDetail(String id, String title, String channel, String date,
                               String description, List<String> comments, String warning) {}
 }

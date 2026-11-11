@@ -3,6 +3,7 @@ package com.marketing.agent.video.infrastructure;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -67,7 +68,18 @@ public class YouTubeClient {
         if (key.isBlank()) throw new IllegalStateException("backend/.env에 YOUTUBE_API_KEY를 설정하세요.");
     }
 
-    public record Snippet(String title, String channelTitle, String publishedAt, String description) {}
+    public record Thumbnail(String url) {}
+    public record Snippet(String title, String channelTitle, String publishedAt, String description,
+                          Map<String, Thumbnail> thumbnails) {
+        public String thumbnailUrl() {
+            if (thumbnails == null) return null;
+            for (String size : List.of("medium", "default", "high", "standard", "maxres")) {
+                Thumbnail image = thumbnails.get(size);
+                if (image != null && image.url() != null && !image.url().isBlank()) return image.url();
+            }
+            return null;
+        }
+    }
     public record SearchId(String videoId) {}
     public record SearchItem(SearchId id, Snippet snippet) {}
     public record SearchResponse(List<SearchItem> items) {}
