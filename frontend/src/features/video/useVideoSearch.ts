@@ -37,13 +37,18 @@ export function useVideoSearch() {
   const request = useRef<AbortController | null>(null)
   useEffect(() => () => request.current?.abort(), [])
 
-  async function load(id?: string, append = false) {
+  function changeFilters(next: Filters) {
+    setFilters(next)
+    if (query.trim()) void load(undefined, false, next)
+  }
+
+  async function load(id?: string, append = false, criteria = filters) {
     if (request.current) return
     if (append && !nextPage) return
     const searchQuery = append && nextPage ? nextPage.query : query.trim()
-    const params = new URLSearchParams({ query: searchQuery, order: filters.order })
-    const after = append ? nextPage?.after : Number(filters.days) > 0
-      ? new Date(Date.now() - Number(filters.days) * 86400000).toISOString() : undefined
+    const params = new URLSearchParams({ query: searchQuery, order: criteria.order })
+    const after = append ? nextPage?.after : Number(criteria.days) > 0
+      ? new Date(Date.now() - Number(criteria.days) * 86400000).toISOString() : undefined
     if (after) params.set("publishedAfter", after)
     if (append && nextPage) params.set('pageToken', nextPage.token)
     const controller = new AbortController()
@@ -51,7 +56,7 @@ export function useVideoSearch() {
     setBusy(true)
     if (!append) setDetail(null)
     if (!id && !append) {
-      setApplied(filters)
+      setApplied(criteria)
       setItems([])
       setNextPage(null)
       sessionStorage.removeItem('clipdesk.workspace')
@@ -124,7 +129,7 @@ export function useVideoSearch() {
     }
   }
 
-  return { filters, setFilters, query, setQuery, items, detail, busy, message, load,
+  return { filters, changeFilters, query, setQuery, items, detail, busy, message, load,
     hasMore: nextPage !== null && nextPage.query === query.trim() && filters.order === applied.order && filters.days === applied.days,
     loadMore: () => load(undefined, true) }
 }

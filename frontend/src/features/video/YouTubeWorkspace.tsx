@@ -10,7 +10,7 @@ import { useVideoSearch } from './useVideoSearch'
 
 export function YouTubeWorkspace() {
 
-  const { filters, setFilters, query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
+  const { filters, changeFilters, query, setQuery, items, detail, busy, message, load, hasMore, loadMore } =
     useVideoSearch()
   const [format, setFormat] = useState('all')
   const visibleItems = items.filter(({ durationSeconds }) => {
@@ -39,13 +39,13 @@ export function YouTubeWorkspace() {
         />
         <div className="search-options">
           <label>정렬 <select disabled={busy} value={filters.order}
-            onChange={event => setFilters({ ...filters, order: event.target.value })}>
+            onChange={event => changeFilters({ ...filters, order: event.target.value })}>
             <option value="date">최신순</option>
             <option value="relevance">관련성순</option>
             <option value="viewCount">조회수순</option>
           </select></label>
           <label>업로드 기간 <select disabled={busy} value={filters.days}
-            onChange={event => setFilters({ ...filters, days: event.target.value })}>
+            onChange={event => changeFilters({ ...filters, days: event.target.value })}>
             <option value="0">전체 기간</option>
             <option value="1">최근 24시간</option>
             <option value="7">최근 7일</option>
